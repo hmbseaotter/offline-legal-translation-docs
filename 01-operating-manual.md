@@ -811,8 +811,18 @@ on a German sample before relying on GaMS3 for that pair.
 | Verification          | Deterministic linter       | Catches numeric and consistency errors that models cannot self-detect; costs nothing to run                                       |
 | Back-translation      | Dropped, then re-tested    | It does detect added text. But asking the model to audit its own output against the source finds the same additions in less time and needs no comparison step |
 | Dates, amounts, times | Converted, not verbatim    | The translator's rule. English takes March 5, 2024 and a decimal point; Slovene takes 5. marec 2024 — ordinal period, lowercase month, spaced — and a decimal comma. Whole-segment values are converted in code, without a model call |
-| Institution names     | Translated                 | A court's name is not an identifier. Listing them beside case numbers made two models read the rule two ways, one leaving Slovene in the output |
+| Institution names     | Translated; source bracketed on first mention per document | A court's name is not an identifier, so it is translated — listing them beside case numbers had made two models read that rule two ways, one leaving Slovene in the output. The source form is kept in parentheses on the first mention in each document and dropped thereafter, because a reader may open any file first and each has to stand on its own |
 | Completed provisions  | Flag the context           | The model finishes famous provisions from memory. No prompt stopped it and no deterministic check sees it, so segments citing a statute are flagged for word-by-word review |
+| Machine-assisted drafts | Permitted, no disclosure | The translator: what counts is the final product, not how it was produced. Most of the trade already edits machine output. No obligation to tell the court |
+| Confidentiality       | Premises, not paperwork    | Acceptable so long as the texts never leave the translator's premises, and no visitors are received there. Nothing needed in writing |
+| Transfer to translator | USB stick, hand-carried   | Machines sit on adjacent tables. The translator judges the crossing not a practical risk; it is the one point where material leaves the container, so it is written down rather than assumed |
+| Billing unit          | Source words               | What `tr-inventory --count` reports. Segments are counted alongside because they govern machine time, which is a different question from what is owed |
+| Files not in the source language | Excluded from work and billing | Which is why triage tracks them: `by-lang/*.txt` locates them so they can be pulled out before translation starts |
+| Quoted provisions     | Render only what is present | Never completed from the instrument's official text. Where no established translation exists the source is left with a visible marker, and the translator supplies the wording |
+| Acronym expansion     | Footnote, not inline       | Expanding `KZ-1` in the body harms readability and spacing. A footnote mark carries the full form |
+| Illegible source      | `[ILLEGIBLE]`              | Confirmed as the convention |
+| Certification         | Batch form, stamp on paper | No per-document certification block. `.docx` primary, `.pdf` acceptable, `.xlsx` for tables since text formats handle them poorly |
+| Language pairs        | sl, en, de — all six directions | German is not needed yet but will be. Every one of the three can be source or target |
 | Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. Encrypted swap is the cheapest of the remaining mitigations if the risk is revisited |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
 | Glossary layering     | Shared base + overlay      | Terminology is reusable; case specifics are not. Layering gets the benefit without the leak                                       |
@@ -852,5 +862,24 @@ on a German sample before relying on GaMS3 for that pair.
 - Verify German quality against base Gemma before extending to that pair
   (S12).
 
-- Settle the professional questions with the certifying translator. This
-  item gates everything else.
+- Run Phase 1 on a small subset of the real assignment. The translator's
+  preference: real material, so no work is wasted. This is now the gating
+  item — the professional questions are answered and recorded in §13.
+
+- While editing the Phase 1 pages, tally *why* each edit was made:
+  terminology, register, numbers, additions, omission, formatting. The ratio
+  says whether to proceed; the tally says whether a poor ratio is fixable.
+  Terminology is cheap to fix and there is no glossary yet, so a bad number
+  driven by terminology is a different verdict from the same number driven
+  by register.
+
+- Build the visible marker for quoted provisions with no established
+  translation (§8.1). The trigger needs settling: on a first run the memory
+  is empty, so a naive rule marks every citation.
+
+- Expand acronyms by footnote rather than inline. `python-docx` has no
+  footnote API, so this means writing the XML directly.
+
+- Extend the locale rules to German before that pair is used: it keeps the
+  24-hour clock and writes `5. März 2024`. Six directions are in scope
+  across Slovene, English and German.
