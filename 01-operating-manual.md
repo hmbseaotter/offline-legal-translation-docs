@@ -260,8 +260,9 @@ theft, not by the network:
 > **lsblk** -o NAME,FSTYPE,MOUNTPOINT \| **grep** -i crypt
 
 If that returns nothing, the installation is unencrypted. Retrofitting
-is disruptive; an encrypted container holding only ~/translate is the
-pragmatic alternative.
+is disruptive; an encrypted container holding only
+~/translation-work/confidential-projects — which is what case-init
+creates — is the pragmatic alternative.
 
 Confirm no cloud-routed models. Recent Ollama versions can dispatch to
 hosted models, which would send document text off the machine:
@@ -694,3 +695,6 @@ on a German sample before relying on GaMS3 for that pair.
 
 - Verify German quality against base Gemma before extending to that pair
   (S12).
+
+- Settle the professional questions with the certifying translator. This
+  item gates everything else.
