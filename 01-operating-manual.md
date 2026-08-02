@@ -813,7 +813,7 @@ on a German sample before relying on GaMS3 for that pair.
 | Dates, amounts, times | Converted, not verbatim    | The translator's rule. English takes March 5, 2024 and a decimal point; Slovene takes 5. marec 2024 — ordinal period, lowercase month, spaced — and a decimal comma. Whole-segment values are converted in code, without a model call |
 | Institution names     | Translated                 | A court's name is not an identifier. Listing them beside case numbers made two models read the rule two ways, one leaving Slovene in the output |
 | Completed provisions  | Flag the context           | The model finishes famous provisions from memory. No prompt stopped it and no deterministic check sees it, so segments citing a statute are flagged for word-by-word review |
-| Disk encryption       | Container only, for now    | The root filesystem is plain ext4. The container protects the case material; nothing outside it is protected, which is a live risk rather than a settled one |
+| Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. Encrypted swap is the cheapest of the remaining mitigations if the risk is revisited |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
 | Glossary layering     | Shared base + overlay      | Terminology is reusable; case specifics are not. Layering gets the benefit without the leak                                       |
 | Data location         | Encrypted container        | Makes the assistant boundary structural rather than remembered                                                                    |
@@ -823,16 +823,15 @@ on a German sample before relying on GaMS3 for that pair.
 - Measure the 7,000-row spreadsheet with tr-xlsx --survey. The unique
   ratio determines whether it is hours or days.
 
-- Trial the container on a throwaway 1 GB image and exercise open,
-  close, and the guard before real data goes near it. Nothing has been
-  encrypted yet: case-init has never run, so confidential-projects/ is an
-  ordinary directory. Every tool refuses to write there, correctly, until
-  it exists.
+- Exercise open, close and the guard on the container before real data
+  goes near it. The container now exists — LUKS2, 40 GB sparse, header
+  backed up to ~/.case/header.bak — and has been verified closed, with
+  the bare mountpoint made immutable so a stray write cannot land there.
+  What has not been exercised is a full cycle with a project in it.
 
-- Decide what to do about the unencrypted disk. The finding is settled —
-  the root filesystem is plain ext4 (S3.4) — and the decision is not. The
-  container covers the case material; it does not cover a file copied out
-  for review, a temporary file, or the swap.
+- Copy ~/.case/header.bak somewhere off this machine. A corrupted LUKS
+  header means the data is unrecoverable even with the correct
+  passphrase, because the header holds the encrypted master key.
 
 - Decide whether the vision model earns a place in the OCR stage. It
   works — 97.3% on a rendered page, every case number, amount, date and

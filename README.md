@@ -63,10 +63,10 @@ to send to the client.
 ## Open items (manual §14)
 
 - Measure the 7,000-row spreadsheet: `tr-xlsx <file> --survey`
-- Trial the container on a throwaway 1 GB image before real data —
-  `case-init` has never run, so nothing is encrypted yet
-- Decide what to do about the unencrypted disk. The finding is settled: the
-  root filesystem is plain ext4, so the container is the only protection
+- Exercise a full open/close cycle with a project in the container before
+  real data goes near it. The container now exists and is verified closed
+- Copy `~/.case/header.bak` off this machine — a corrupted LUKS header
+  means the data is gone even with the correct passphrase
 - Decide which pages earn the vision cross-check, and test it on a real scan
 - Establish how often the model completes a statutory provision from memory
 - Seed the translation memory from the translator's prior work

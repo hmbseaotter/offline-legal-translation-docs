@@ -153,7 +153,7 @@ In order. Each has an acceptance criterion so completion is unambiguous.
 | 5      | Measure real generation and prefill rates            | DONE. Prefill 7.00, generation 2.20, sustained 0.81 tok/s |
 | 6      | Test whether Qwen vision input works on a page image | DONE. Transcribed 97.3%; every case number, amount, date and diacritic exact |
 | 7      | Tune the abbreviation list against fixture output    | DONE. 11/11, after fixing spaced forms such as d. o. o.  |
-| 8      | Verify disk encryption; report the finding           | ANSWERED, decision outstanding. The root filesystem is plain ext4 — not encrypted |
+| 8      | Verify disk encryption; report the finding           | DONE. Root is plain ext4; container-only accepted as a recorded decision (manual §13) |
 | 9      | Confirm no cloud-routed Ollama models                | DONE. No -cloud tags                                     |
 | 10     | Set up systemd-inhibit and tmux for long runs        | DONE. A batch ran through a 3½-minute lid close          |
 
@@ -170,10 +170,12 @@ PDF text layer did not, keeping each label with its value instead of
 flattening headers away from the figures. It costs about 6.7 minutes a
 page, so it belongs on pages that warrant it rather than on all of them.
 
-Task 8 has its answer but not its decision: the disk is not encrypted, so
-the container is the only protection and anything outside it — including
-the reference documents and any file copied out for review — is in the
-clear.
+Task 8 is settled rather than merely answered. The disk is not encrypted
+and will not be: retrofitting means re-encrypting in place or
+reinstalling, and the container is what protects the case material at
+rest. The residual risk is accepted and recorded in manual §13 — swap,
+temporary files and anything copied out for review are in the clear, as
+is everything while the container is open.
 
 Three findings came out of the work that were not on the list, and each
 is recorded in the manual: the pipeline must convert dates, amounts and
