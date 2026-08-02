@@ -47,7 +47,9 @@ So the line is drawn by directory, and it is drawn generously:
 | .../confidential-projects/\*\*       | No              | The entire container tree — all matters               |
 | .../\<project\>/source/, translated/ | No              | Originals and their translations                      |
 | .../\<project\>/work/, logs/         | No              | OCR text layers, memory, and logs that quote segments |
-| .../\_shared/glossary/               | Ask first       | General terminology, usually fine                     |
+| .../work/inventory/manifest.tsv, by-lang/ | No         | Lists of file paths; a filename carries party names, dates, case numbers |
+| .../work/inventory/summary.txt       | Counts only     | No paths. This is the file that goes to the client    |
+| .../\_shared/glossary/               | No              | Inside the denied tree. Reaching it needs the container mounted, which the guard already forbids during a session |
 
 **2.1 Controls, in order of how much to trust them**
 
@@ -82,7 +84,10 @@ It almost never does. The fixture generator produces synthetic Slovene
 legal documents that exercise every hard case in the pipeline —
 abbreviations that must not split sentences, case numbers and dates that
 must pass through untranslated, diacritics, and a 7,000-row table with a
-realistic repeat structure. Development and debugging should use these
+realistic repeat structure. It also writes a nested, two-drop,
+mixed-language tree under fixtures/drop/ — Slovene beside Croatian,
+English and Armenian, plus a file too short to classify — which is what
+triage is developed against. Development and debugging should use these
 exclusively.
 
 > **cd** "\$KIT"
@@ -215,6 +220,7 @@ These are operator-only, in a plain terminal with no assistant attached.
 | **Activity**                            | **Why it stays outside**                                    |
 |-----------------------------------------|-------------------------------------------------------------|
 | Batch runs over the real corpus         | Progress output and errors quote source text                |
+| Running tr-inventory over a real drop   | It opens every client file to detect its language           |
 | Opening the container (case-open)       | Denied by rule; open it only in a plain terminal            |
 | OCR verification against page images    | Requires reading the documents. Human work regardless       |
 | Glossary extraction from real documents | Use the local Qwen model for the candidate list, not Claude |
