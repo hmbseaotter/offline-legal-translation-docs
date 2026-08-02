@@ -122,11 +122,18 @@ invariants. Claude Code reads it at session start, so the constraint is
 in context before the first instruction. Read it yourself once as well —
 it is the shortest statement of what must not change and why.
 
-Optional but recommended, since it gives you history on the config and
-the scripts:
+The kit is already a git repository, so there is nothing to initialise.
+One setting is not optional after unpacking a fresh copy: the hooks that
+keep client material out of the repository do not run until it is told
+where they live, because a global core.hooksPath shadows .git/hooks
+entirely.
 
-> **cd** "\$KIT" && **git** init && **git** add -A && **git** commit -m
-> "initial kit"
+> **cd** "\$KIT" && **git** config core.hooksPath .githooks
+
+tr-setup does this for you whenever the kit is already a repository.
+Either way, stage selectively — git add \<path\> — rather than git add
+-A, so a document copied in to reproduce a defect cannot ride along into
+a commit.
 
 **4. Tasks for the Claude Code session**
 
