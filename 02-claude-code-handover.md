@@ -91,7 +91,7 @@ exclusively.
 >
 > *\# exercises the same code paths as the real corpus*
 >
-> TR_ROOT=/tmp/trtest **tr-xlsx** fixtures/dokazi-velika.xlsx --survey
+> **tr-xlsx** fixtures/dokazi-velika.xlsx --survey
 
 If a genuine document is needed to reproduce a defect, describe the
 structure rather than sharing the content: "a paragraph where a case
