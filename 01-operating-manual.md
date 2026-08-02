@@ -26,6 +26,7 @@ built until that number is known.
 | **Command**      | **Purpose**                                             |
 |------------------|---------------------------------------------------------|
 | tr-project       | List, create, or switch the active confidential project |
+| tr-inventory     | Classify every file in source/ by source language       |
 | tr-status        | What is translated, what is missing, what is stale      |
 | tr-run           | Translate everything in source/ not yet in translated/  |
 | tr-lint          | Deterministic checks; produces the reviewer worklist    |
@@ -113,8 +114,12 @@ outside that tree for cd \$KIT && claude to be a safe operation. Keeping
 them under Claude_Stuff/cli_projects/ also puts all Claude Code
 work in one place.
 
-Nothing in the kit hardcodes its own location — every script derives it
-at run time — so the directory can be renamed or moved without edits.
+No script in the kit hardcodes its own location; each derives it at run
+time, and core.hooksPath is relative, so both travel with the directory.
+Two lines in ~/.bashrc do not: the export KIT= and the \$KIT/bin PATH
+entry tr-setup wrote with the old absolute path. Re-running tr-setup
+after a move appends the new PATH line but leaves the stale one, so edit
+~/.bashrc by hand.
 
 **2.2 Where these documents live**
 
@@ -283,11 +288,52 @@ generation on this hardware. Prefill will be considerably faster.
 
 **4. Before bulk translation**
 
-These three inputs determine output quality far more than any model
-setting. None can be automated, and all should be settled before the
-corpus is processed.
+Four things to settle before the corpus is processed. The first decides
+which files are in scope at all. The other three determine output quality
+far more than any model setting, and none of them can be automated.
 
-**4.1 The glossary — highest leverage**
+**4.1 Triage — which files are in scope**
+
+A client drop is not a clean corpus. Files arrive in the folder structure
+the client used — often two or more separate drops, nested several levels
+— and that structure is carried through source/ to translated/ untouched.
+The tree also mixes languages: Slovene alongside English, Croatian or
+Serbian, Armenian, and whatever else a matter happens to contain. Only the
+files in the project's source language are translated; the rest are counted
+and set aside.
+
+tr-inventory walks source/ in full, records every file whether or not the
+pipeline can convert it, and detects the language of each. Run it before
+tr-status or tr-run — both work from its manifest.
+
+> **tr-inventory** *\# classify every file in source/*
+>
+> **tr-inventory** --rescan *\# re-examine files already recorded*
+>
+> **tr-inventory** --no-ocr *\# skip the sampling pass on scanned PDFs*
+
+This is not tidiness. A Croatian file pushed through a Slovene-to-English
+prompt costs hours of inference at four tokens per second and produces
+confident nonsense — and the result is written into work/tm.sqlite keyed on
+the source text, so it is reused silently every time that segment
+reappears. Undoing it means editing the memory or retranslating the matter.
+tr-run warns rather than proceeding quietly when no inventory exists.
+
+Three files are written to work/inventory/. manifest.tsv lists every file
+with its path, format, detected language and confidence. by-lang/ splits
+those paths into one list per language. summary.txt holds counts and no
+paths at all, and is the only one of the three that may be sent to the
+client — a filename in a criminal matter routinely carries a party name, a
+date or a case number.
+
+Scanned PDFs have no text layer to detect from, so tr-inventory OCRs a page
+or two with the candidate languages combined and decides from that; the
+full OCR pass in S5.3 then runs in the right language rather than a guessed
+one. Anything it cannot place — too little text, an unsupported format, an
+unreadable file — goes to the undetermined bucket with its path, for a
+human to deal with. Nothing is guessed.
+
+**4.2 The glossary — highest leverage**
 
 Two files, layered. The shared base holds legal terminology that carries
 across matters; the project file holds case-specific renderings and wins
@@ -316,7 +362,7 @@ designations, document types. The already-installed Qwen model is fast
 and well suited to drafting the candidate list for the translator to
 rule on.
 
-**4.2 Non-translatables**
+**4.3 Non-translatables**
 
 Regex patterns in nontranslatable.txt mark strings reproduced verbatim:
 case numbers, file references, dates, amounts, statute short forms.
@@ -334,7 +380,7 @@ known location, so catching them in code is free quality.
 >
 > **print(trlib.is_translatable('I** K 12345/2024')) *\# expect False"*
 
-**4.3 Seed the memory with the translator’s prior work**
+**4.4 Seed the memory with the translator’s prior work**
 
 The metric is edits this particular translator makes. If any prior EN↔SL
 legal translations exist, aligning them into the memory means drafts
@@ -460,6 +506,8 @@ register.
 > **case-open** *\# unlock the container*
 >
 > **tr-project** *\# confirm which project is active*
+>
+> **tr-inventory** *\# classify the drop; after new files arrive*
 >
 > **tr-status** *\# what remains*
 >
@@ -620,7 +668,7 @@ not held at full charge continuously:
 | Process killed mid-run           | Out of memory. Check swap (S3.2) and lower TR_NUM_CTX                                                         |
 | Output contains commentary       | Model ignored the output-only instruction. Lower temperature, or tighten prompts/translate.txt                |
 | Sentences split at abbreviations | Add the abbreviation to ABBREV in lib/trlib.py and re-run with a new TR_PROMPT_VERSION                        |
-| Case numbers being translated    | Add a pattern to nontranslatable.txt; verify with is_translatable() per S4.2                                  |
+| Case numbers being translated    | Add a pattern to nontranslatable.txt; verify with is_translatable() per S4.3                                  |
 | Very slow                        | Confirm mains power and that the platform profile is not power-saver: cat /sys/firmware/acpi/platform_profile |
 | Diacritics wrong in OCR          | Confirm -l slv+eng was used. Set TR_OCR_LANGS if the pair differs                                             |
 
@@ -637,6 +685,8 @@ not held at full charge continuously:
 | TR_PROMPT_VERSION | v1                                       | Part of the cache key. Bump to force retranslation          |
 | TR_OCR_LANGS      | slv+eng                                  | Tesseract languages. Add deu for German                     |
 | TR_OLLAMA         | http://127.0.0.1:11434                   | Ollama endpoint                                             |
+| TR_DICTS          | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with |
+| TR_OCR_SAMPLE_LANGS | slv+hrv+eng                            | Tesseract languages for the detection sampling pass on scanned PDFs |
 | TR_VENV           | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere |
 | TR_NO_REEXEC      | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail |
 | CASE_IMG          | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status |
@@ -691,7 +741,7 @@ on a German sample before relying on GaMS3 for that pair.
 - Test whether Qwen vision input works, for the dual-engine OCR
   cross-check (S5.3).
 
-- Seed the memory from the translator’s prior work if any exists (S4.3).
+- Seed the memory from the translator’s prior work if any exists (S4.4).
 
 - Verify German quality against base Gemma before extending to that pair
   (S12).
