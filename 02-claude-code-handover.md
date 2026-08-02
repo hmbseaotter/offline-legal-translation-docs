@@ -1,6 +1,6 @@
 **Handover — Moving Build Work to Claude Code**
 
-2026-08-01 · Companion to the Operating Manual v1.0 · Read S2 before
+2026-08-01 · Companion to the Operating Manual v1.2 · Read S2 before
 starting a session
 
 **1. Where things run**
@@ -162,8 +162,11 @@ risk in the project gets materially smaller.
 Iterating on the pipeline against a 13 GB model at four tokens per
 second is slow and unnecessary. A mock server that mimics the Ollama API
 makes the whole pipeline testable in seconds, and lets you inject
-deliberate faults to confirm the linter catches them. This is how the
-kit was verified.
+deliberate faults to confirm the linter catches them. Run the fixture
+corpus through it after any change to segmentation, the non-translatable
+patterns or the workers: the whole set completes in seconds and tr-lint
+reports the injected NUM fault. It does not tell you anything about the
+model — that is task 5.
 
 > **cat** \> **/tmp/mock_ollama.py** \<\<'EOF'
 >
