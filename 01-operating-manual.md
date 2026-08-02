@@ -42,7 +42,7 @@ working files, logs, and translation memory. Filenames are preserved
 exactly from source to output, so finding gaps is a plain set difference
 between two directories.
 
-> **~/Claude_Stuff/desktop_app_projects/**
+> **~/Claude_Stuff/cli_projects/**
 >
 > **translation-tools/** the kit. Outside the data tree.
 >
@@ -101,7 +101,7 @@ The kit path is long, so this manual uses \$KIT throughout. Define it
 once and the command blocks below can be copied verbatim.
 
 > **echo** 'export
-> KIT=~/Claude_Stuff/desktop_app_projects/translation-tools' \>\>
+> KIT=~/Claude_Stuff/cli_projects/translation-tools' \>\>
 > **~/.bashrc**
 >
 > **source** ~/.bashrc
@@ -110,7 +110,7 @@ The kit deliberately sits on a different branch of the filesystem from
 the case data. The Claude Code guard refuses to start a session from
 anywhere inside or above ~/translation-work/, so the scripts must live
 outside that tree for cd \$KIT && claude to be a safe operation. Keeping
-them under Claude_Stuff/desktop_app_projects/ also puts all Claude Code
+them under Claude_Stuff/cli_projects/ also puts all Claude Code
 work in one place.
 
 Nothing in the kit hardcodes its own location — every script derives it
@@ -171,7 +171,7 @@ dominated by the model download.
 > *\# a shorthand worth putting in ~/.bashrc, used throughout this
 > manual*
 >
-> **export** KIT=~/Claude_Stuff/desktop_app_projects/translation-tools
+> **export** KIT=~/Claude_Stuff/cli_projects/translation-tools
 >
 > **mkdir** -p "\$KIT"
 >
@@ -195,10 +195,10 @@ Case Container document:
 >
 > **./bin/case-init** 40G *\# LUKS2 container, once*
 >
-> **cp** bin/case-guard ~/.local/bin/claude *\# refuses to start while
+> **cp** bin/case-guard ~/.local/sbin/claude *\# refuses to start while
 > mounted*
 >
-> **chmod** +x ~/.local/bin/claude
+> **chmod** +x ~/.local/sbin/claude
 >
 > **case-open**
 >

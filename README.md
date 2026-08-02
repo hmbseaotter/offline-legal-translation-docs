@@ -6,7 +6,7 @@ the container is closed — which is exactly when you need the instructions for
 opening it.
 
 **Location:** `~/translation-work/docs/`
-**Kit location:** `~/Claude_Stuff/desktop_app_projects/translation-tools/`
+**Kit location:** `~/Claude_Stuff/cli_projects/translation-tools/`
 **Data location:** `~/translation-work/confidential-projects/` (encrypted container)
 
 None of these documents contain case material. Claude Code may read them.

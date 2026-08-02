@@ -117,7 +117,7 @@ with contents.
 
 **4.2 Create the container**
 
-> **cd** "\$KIT" *\# the kit, under Claude_Stuff/desktop_app_projects/*
+> **cd** "\$KIT" *\# the kit, under Claude_Stuff/cli_projects/*
 >
 > **./bin/case-init** 40G
 
@@ -162,15 +162,15 @@ matter.
 This is the step that makes the whole arrangement structural rather than
 procedural. Do not skip it.
 
-> **mkdir** -p ~/.local/bin
+> **mkdir** -p ~/.local/sbin
 >
-> **cp** "\$KIT"/bin/case-guard ~/.local/bin/claude
+> **cp** "\$KIT"/bin/case-guard ~/.local/sbin/claude
 >
-> **chmod** +x ~/.local/bin/claude
+> **chmod** +x ~/.local/sbin/claude
 >
-> *\# ~/.local/bin must come first in PATH*
+> *\# ~/.local/sbin must come first in PATH*
 >
-> **echo** 'export PATH="\$HOME/.local/bin:\$PATH"' \>\> **~/.bashrc**
+> **echo** 'export PATH="\$HOME/.local/sbin:\$PATH"' \>\> **~/.bashrc**
 >
 > **source** ~/.bashrc
 >

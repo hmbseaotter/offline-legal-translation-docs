@@ -40,7 +40,7 @@ So the line is drawn by directory, and it is drawn generously:
 
 | **Path**                             | **Claude Code** | **Why**                                               |
 |--------------------------------------|-----------------|-------------------------------------------------------|
-| ~/Claude_Stuff/desktop_app_projects/ | Yes             | All Claude Code project work lives here               |
+| ~/Claude_Stuff/cli_projects/ | Yes             | All Claude Code project work lives here               |
 | …/translation-tools/                 | Yes             | The kit: scripts and config. No case data ever        |
 | …/translation-tools/fixtures/        | Yes             | Synthetic, invented content                           |
 | ~/translation-work/docs/             | Yes             | These reference documents. No case content            |
@@ -101,7 +101,7 @@ excerpt yourself before pasting.
 
 **3. Getting started in Claude Code**
 
-> **export** KIT=~/Claude_Stuff/desktop_app_projects/translation-tools
+> **export** KIT=~/Claude_Stuff/cli_projects/translation-tools
 >
 > **mkdir** -p "\$KIT"
 >
@@ -256,7 +256,7 @@ handover.
 
 | **Section** | **Amendment**                                                                                                                                                      |
 |-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| S2          | The kit lives under ~/Claude_Stuff/desktop_app_projects/, a separate branch from ~/translation-work/. That disjointness is a confidentiality control, not tidiness |
+| S2          | The kit lives under ~/Claude_Stuff/cli_projects/, a separate branch from ~/translation-work/. That disjointness is a confidentiality control, not tidiness |
 | S3.1        | Adjust the username in .claude/settings.json deny paths after unpacking                                                                                            |
 | S6          | Phase 1 timing runs in a plain terminal. The drafts and the translator’s edits are case material                                                                   |
 
