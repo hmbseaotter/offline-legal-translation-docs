@@ -636,6 +636,11 @@ not held at full charge continuously:
 | TR_PROMPT_VERSION | v1                                       | Part of the cache key. Bump to force retranslation          |
 | TR_OCR_LANGS      | slv+eng                                  | Tesseract languages. Add deu for German                     |
 | TR_OLLAMA         | http://127.0.0.1:11434                   | Ollama endpoint                                             |
+| TR_VENV           | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere |
+| TR_NO_REEXEC      | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail |
+| CASE_IMG          | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status |
+| CASE_MAP          | casedata                                 | Device-mapper name while the container is unlocked          |
+| CASE_MNT          | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks |
 
 For a German matter, set the pair once in that project’s project.conf
 rather than on the command line, so every later run inherits it:
