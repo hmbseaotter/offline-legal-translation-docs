@@ -283,8 +283,17 @@ hosted models, which would send document text off the machine:
 > \| **ollama** run gams3:q8 --verbose
 
 Read two things from the --verbose output: prompt eval rate (prefill)
-and eval rate (generation). Expect roughly 4 tokens per second
-generation on this hardware. Prefill will be considerably faster.
+and eval rate (generation). Measured on this hardware with gams3:q8,
+over 12 samples of real pipeline traffic: prefill 7.00 tokens per
+second, generation 2.20. What governs planning is neither of those but
+the sustained rate — 0.81 output tokens per second, 48.3 seconds of
+wall clock per segment. The earlier estimate of 4 tokens per second was
+optimistic by roughly five times, because most of a segment's cost is
+not generation: every call re-reads a 200-token system prompt at 7
+tokens per second, some 28 seconds, and pays it whether the segment is
+a sentence or two words. A faster quantization therefore attacks the
+smaller half of that cost; batching several segments into one call, or
+shortening the system prompt, attacks the larger.
 
 **4. Before bulk translation**
 
@@ -313,7 +322,7 @@ tr-status or tr-run — both work from its manifest.
 > **tr-inventory** --no-ocr *\# skip the sampling pass on scanned PDFs*
 
 This is not tidiness. A Croatian file pushed through a Slovene-to-English
-prompt costs hours of inference at four tokens per second and produces
+prompt costs hours of inference at 48 seconds a segment and produces
 confident nonsense — and the result is written into work/tm.sqlite keyed on
 the source text, so it is reused silently every time that segment
 reappears. Undoing it means editing the memory or retranslating the matter.
