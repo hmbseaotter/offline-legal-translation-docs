@@ -46,6 +46,20 @@ their instructions; paths and recommendations in them are out of date.
 3. `02-claude-code-handover` §2 — the boundary, before opening any session
 4. `01-operating-manual` §6 — the Phase 1 experiment that decides whether to proceed
 
+## Triage comes first
+
+A client drop is not a clean Slovene corpus: it arrives as nested folder
+trees mixing Slovene with English, Croatian/Serbian and more. `tr-inventory`
+classifies every file by source language before anything is translated, and
+`tr-run` then works only on the matching ones. Pushing a Croatian file
+through an sl→en prompt wastes the inference *and* caches a wrong answer in
+`work/tm.sqlite` that is reused silently from then on.
+
+Its `manifest.tsv` and `by-lang/*.txt` list file paths, and a filename in a
+criminal matter carries party names, dates and case numbers — so both are
+case material. Only `summary.txt`, which holds counts and no paths, is safe
+to send to the client.
+
 ## Open items (manual §14)
 
 - Measure the 7,000-row spreadsheet: `tr-xlsx <file> --survey`
@@ -54,6 +68,15 @@ their instructions; paths and recommendations in them are out of date.
 - Test whether Qwen vision input works, for dual-engine OCR
 - Seed the translation memory from the translator's prior work
 - Verify German quality against base Gemma before extending to that pair
+- Re-measure language detection on legal text; the quoted figures come from
+  UDHR, which is thin and general-register (`tools/calibrate_lang.py`)
 - Settle the professional questions with the certifying translator
 
 The last item gates everything else.
+
+## Where things live
+
+The kit is a git repository — `offline-translation-kit`, private on GitHub —
+and these documents are `offline-translation-docs`. Clone the kit; do not
+unpack it from an archive. A copy without `.git` cannot have the hook that
+keeps client documents out of the repository.

@@ -180,7 +180,7 @@ dominated by the model download.
 >
 > **mkdir** -p "\$KIT"
 >
-> **unzip** translation-tools.zip -d "\$KIT"
+> **git clone** git@github.com:hmbseaotter/offline-translation-kit.git "\$KIT"
 >
 > **chmod** +x "\$KIT"/bin/\*
 >
