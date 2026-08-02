@@ -63,9 +63,12 @@ to send to the client.
 ## Open items (manual §14)
 
 - Measure the 7,000-row spreadsheet: `tr-xlsx <file> --survey`
-- Trial the container on a throwaway 1 GB image before real data
-- Confirm full-disk encryption as well as the container
-- Test whether Qwen vision input works, for dual-engine OCR
+- Trial the container on a throwaway 1 GB image before real data —
+  `case-init` has never run, so nothing is encrypted yet
+- Decide what to do about the unencrypted disk. The finding is settled: the
+  root filesystem is plain ext4, so the container is the only protection
+- Decide which pages earn the vision cross-check, and test it on a real scan
+- Establish how often the model completes a statutory provision from memory
 - Seed the translation memory from the translator's prior work
 - Verify German quality against base Gemma before extending to that pair
 - Re-measure language detection on legal text; the quoted figures come from
@@ -73,6 +76,20 @@ to send to the client.
 - Settle the professional questions with the certifying translator
 
 The last item gates everything else.
+
+## Two things a reader should know early
+
+**Throughput is about five times slower than the planning documents assumed.**
+Measured: 0.81 output tokens per second sustained, 48 seconds per segment.
+Most of that is not generation — every call re-reads the system prompt,
+about 28 seconds of every 48, whether the segment is a sentence or two
+words. Manual §3.4.
+
+**One error class defeats every automated check.** The model finishes famous
+statutory provisions from memory, adding words the source does not contain.
+It reads perfectly, carries no number or glossary term, and no prompt
+prevented it. Segments citing a statute are flagged so a human reads them
+against the source. Manual §8.1.
 
 ## Where things live
 

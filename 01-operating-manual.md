@@ -374,10 +374,24 @@ rule on.
 **4.3 Non-translatables**
 
 Regex patterns in nontranslatable.txt mark strings reproduced verbatim:
-case numbers, file references, dates, amounts, statute short forms.
-Defaults for Slovene court formats are supplied. Every one of these the
-model would otherwise "helpfully" translate is a guaranteed edit at a
-known location, so catching them in code is free quality.
+case numbers, file references, statute short forms. Defaults for Slovene
+court formats are supplied. Every one of these the model would otherwise
+"helpfully" translate is a guaranteed edit at a known location, so
+catching them in code is free quality.
+
+Dates, amounts and times are **not** in that class. They are converted to
+English convention — 5. 3. 2024 becomes 5 March 2024, 12.450,00 becomes
+12,450.00, and a 24-hour time becomes 2:30 p.m. — because that is what a
+translation into English is. The value never changes; only its spelling
+does.
+
+The distinction has a practical edge. Inside a sentence the model does the
+conversion. A segment that is *only* a date or an amount never reaches the
+model at all, because the patterns above exclude it from translation — so
+a Datum column in a spreadsheet stayed in Slovene while the same date in
+prose came out in English, and the deliverable contradicted itself column
+by column. Those whole-segment values are now converted in code: exact,
+consistent, and without the 48 seconds a model call would cost.
 
 > **nano** \$P/\_shared/glossary/nontranslatable.txt
 >
@@ -466,12 +480,28 @@ specifically. Mangled diacritics can still produce valid Slovene words,
 so no spell-check will catch them. OCR output is cached, so stage 2 does
 not re-run it.
 
-A second engine is worth adding if scan quality is poor. The installed
-Qwen model reports a vision capability; a vision model reads a page by a
-completely different mechanism than Tesseract, so their failure modes
-are largely uncorrelated. Run both, compare only the numbers, dates, and
-capitalized tokens, and inspect where they disagree. Test that vision
-input works before designing around it:
+A second engine is worth adding if scan quality is poor. A vision model
+reads a page by a completely different mechanism than Tesseract, so their
+failure modes are largely uncorrelated. Run both, compare only the
+numbers, dates, and capitalized tokens, and inspect where they disagree.
+
+**Vision input works.** The installed Qwen model transcribed a rendered
+Slovene legal page at 97.3% against the page's own text layer, with every
+case number, amount, date and diacritic exact. The 2.7% shortfall was the
+model being right where the comparison was wrong: it read the evidence
+table as a table, keeping Datum with its date and Znesek with its amount,
+where pdftotext flattened the headers into one column and the values into
+another. For a document where a figure must stay bound to its label, that
+is the difference that matters.
+
+It costs about 6.7 minutes a page, against seconds for Tesseract. So the
+cross-check is affordable on the pages that carry the risk — those with
+case numbers, dates and amounts, or where Tesseract's own confidence is
+low — and not affordable across a whole corpus. Which pages is the open
+question; whether it works is not.
+
+One caveat before relying on it: the page tested was a clean render, not
+a scan. Skew, speckle, stamps and handwriting are untested.
 
 > **ollama** run qwen3.6 "Transcribe this page verbatim." ./page.png
 
@@ -575,7 +605,44 @@ alongside the drafts.
 
 Findings are sorted by severity, so the top of the file is where to
 start. Numeric comparison normalizes separators, so 1.234,56 and
-1,234.56 are treated as the same number.
+1,234.56 are treated as the same number, and it folds locale conversions
+together as well: a month that became a word and an hour that shifted by
+twelve are the same value written differently, not a missing number.
+Without that, every date in the corpus raised a finding, and legal
+documents are made of dates.
+
+**8.1 The error the linter cannot catch**
+
+Give the model a source that quotes a provision and stops short of the
+famous continuation, and it finishes the sentence from memory. Asked to
+translate "everyone is entitled to a fair hearing before an independent
+and impartial tribunal", it returns that plus "established by law" —
+three words the source does not contain. That is an interpretation
+presented as a translation, and in a certified document it is the
+translator's name on it.
+
+Two properties make this the worst class of error in the system. It reads
+perfectly, so nothing draws the eye to it. And it carries no number, no
+glossary term and no non-translatable fragment, so **no deterministic
+check can see it** — every check in the table above passes.
+
+Nor is it a prompt problem. Four prompt variants were tried, including
+one whose rule named the failure and explained why it is wrong;
+the model complied with everything else in that prompt and completed the
+provision anyway. Measured over ten well-known provisions, two were
+completed — both ECHR article 6, the most quoted text in criminal
+procedure.
+
+What can be detected is the *context*. Any segment citing a statute or
+treaty is flagged, and those are the segments to read against the source
+word by word. Asking the model to audit its own output against the source
+caught both real additions with no false alarms, at about 12 seconds a
+segment — a second opinion is available if wanted, and applied only to
+flagged segments it costs a few percent of a run rather than several
+times it.
+
+The gap that remains: a famous provision paraphrased without a citation
+marker is not flagged, and nothing detects it.
 
 **9. When to use OmegaT instead**
 
@@ -731,7 +798,11 @@ on a German sample before relying on GaMS3 for that pair.
 | Abbreviation handling | Custom list                | Default splitters shatter Slovene legal text at št., čl., odst., which fights the reviewer on every page                          |
 | Spreadsheet strategy  | Unique-string map          | Collapses the work and guarantees identical cells translate identically                                                           |
 | Verification          | Deterministic linter       | Catches numeric and consistency errors that models cannot self-detect; costs nothing to run                                       |
-| Back-translation      | Dropped                    | Its value assumed a reviewer reading target-only. Sentence-by-sentence comparison against source catches the same errors directly |
+| Back-translation      | Dropped, then re-tested    | It does detect added text. But asking the model to audit its own output against the source finds the same additions in less time and needs no comparison step |
+| Dates, amounts, times | Converted, not verbatim    | The translator's rule: Slovene writes 5. 3. 2024 and a decimal comma, English 5 March 2024 and a decimal point. Whole-segment values are converted in code, without a model call |
+| Institution names     | Translated                 | A court's name is not an identifier. Listing them beside case numbers made two models read the rule two ways, one leaving Slovene in the output |
+| Completed provisions  | Flag the context           | The model finishes famous provisions from memory. No prompt stopped it and no deterministic check sees it, so segments citing a statute are flagged for word-by-word review |
+| Disk encryption       | Container only, for now    | The root filesystem is plain ext4. The container protects the case material; nothing outside it is protected, which is a live risk rather than a settled one |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
 | Glossary layering     | Shared base + overlay      | Terminology is reusable; case specifics are not. Layering gets the benefit without the leak                                       |
 | Data location         | Encrypted container        | Makes the assistant boundary structural rather than remembered                                                                    |
@@ -742,13 +813,29 @@ on a German sample before relying on GaMS3 for that pair.
   ratio determines whether it is hours or days.
 
 - Trial the container on a throwaway 1 GB image and exercise open,
-  close, and the guard before real data goes near it.
+  close, and the guard before real data goes near it. Nothing has been
+  encrypted yet: case-init has never run, so confidential-projects/ is an
+  ordinary directory. Every tool refuses to write there, correctly, until
+  it exists.
 
-- Confirm full-disk encryption as well as the container (S3.4). They
-  cover different threats and both are wanted.
+- Decide what to do about the unencrypted disk. The finding is settled —
+  the root filesystem is plain ext4 (S3.4) — and the decision is not. The
+  container covers the case material; it does not cover a file copied out
+  for review, a temporary file, or the swap.
 
-- Test whether Qwen vision input works, for the dual-engine OCR
-  cross-check (S5.3).
+- Decide whether the vision model earns a place in the OCR stage. It
+  works — 97.3% on a rendered page, every case number, amount, date and
+  diacritic exact, and it read a table correctly where the PDF text layer
+  did not (S5.3). It costs about 6.7 minutes a page, so the question is
+  which pages, not whether.
+
+- Test the vision model on a real scan. The page it read was a clean
+  render; evidence arrives skewed, speckled and stamped, and nothing
+  here shows how it behaves on that.
+
+- Establish how often the model completes a statutory provision from
+  memory (S8.1). Two of ten well-known provisions, both ECHR article 6,
+  is enough to know the risk is real and not enough to know its shape.
 
 - Seed the memory from the translator’s prior work if any exists (S4.4).
 

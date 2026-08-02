@@ -146,21 +146,41 @@ In order. Each has an acceptance criterion so completion is unambiguous.
 
 | **\#** | **Task**                                             | **Done when**                                            |
 |--------|------------------------------------------------------|----------------------------------------------------------|
-| 1      | Run tr-setup; resolve any package or venv failures   | tr-status runs and reports an empty source directory     |
-| 2      | Enlarge swap to 8 GB                                 | free -h shows 8.0Gi                                      |
-| 3      | Run tr-model; confirm the Hugging Face tag resolves  | ollama list shows gams3:q8                               |
-| 4      | Generate fixtures; run the full pipeline over them   | Translated fixtures appear; tr-lint produces a report    |
-| 5      | Measure real generation and prefill rates            | Two tok/s figures recorded from --verbose                |
-| 6      | Test whether Qwen vision input works on a page image | Either a transcription, or a definite failure documented |
-| 7      | Tune the abbreviation list against fixture output    | No segment splits at št. čl. odst. d.o.o.                |
-| 8      | Verify disk encryption; report the finding           | lsblk output interpreted, decision recorded              |
-| 9      | Confirm no cloud-routed Ollama models                | ollama list shows no -cloud tags                         |
-| 10     | Set up systemd-inhibit and tmux for long runs        | A fixture batch survives a lid close                     |
+| 1      | Run tr-setup; resolve any package or venv failures   | DONE. Dependencies land in a venv the scripts now re-exec into |
+| 2      | Enlarge swap to 8 GB                                 | DONE. free -h shows 8.0Gi; persists via fstab            |
+| 3      | Run tr-model; confirm the Hugging Face tag resolves  | DONE. gams3:q8 registered, 12.5 GB                       |
+| 4      | Generate fixtures; run the full pipeline over them   | DONE. 3 documents translated, lint report clean          |
+| 5      | Measure real generation and prefill rates            | DONE. Prefill 7.00, generation 2.20, sustained 0.81 tok/s |
+| 6      | Test whether Qwen vision input works on a page image | DONE. Transcribed 97.3%; every case number, amount, date and diacritic exact |
+| 7      | Tune the abbreviation list against fixture output    | DONE. 11/11, after fixing spaced forms such as d. o. o.  |
+| 8      | Verify disk encryption; report the finding           | ANSWERED, decision outstanding. The root filesystem is plain ext4 — not encrypted |
+| 9      | Confirm no cloud-routed Ollama models                | DONE. No -cloud tags                                     |
+| 10     | Set up systemd-inhibit and tmux for long runs        | DONE. A batch ran through a 3½-minute lid close          |
 
-Task 5 replaces every throughput estimate in the earlier documents with
-measurement. Task 6 is the highest-value experiment: if vision input
-works, the dual-engine OCR cross-check becomes available and the largest
-risk in the project gets materially smaller.
+Task 5 replaced every throughput estimate in the earlier documents with
+measurement, and the numbers were worse than assumed: 0.81 output tokens
+per second sustained, against the 4 the planning arithmetic used —
+optimistic by roughly five times. Most of a segment's cost is not
+generation but re-reading the system prompt, about 28 seconds of every
+48, paid whether the segment is a sentence or two words.
+
+Task 6 succeeded, so the dual-engine OCR cross-check is available rather
+than hypothetical. The vision model also read a table correctly where the
+PDF text layer did not, keeping each label with its value instead of
+flattening headers away from the figures. It costs about 6.7 minutes a
+page, so it belongs on pages that warrant it rather than on all of them.
+
+Task 8 has its answer but not its decision: the disk is not encrypted, so
+the container is the only protection and anything outside it — including
+the reference documents and any file copied out for review — is in the
+clear.
+
+Three findings came out of the work that were not on the list, and each
+is recorded in the manual: the pipeline must convert dates, amounts and
+times to English convention rather than reproduce them (S4.3); the model
+completes famous statutory provisions from memory, which no prompt
+prevented and no deterministic check can see (S8.1); and a client drop is
+not one language, so triage runs before translation (S4.1).
 
 **4.1 Testing without waiting on inference**
 
