@@ -1,6 +1,6 @@
 **Encrypted Case Container — Options, Setup, and Trade-offs**
 
-2026-08-01 · Companion to the Operating Manual v1.0 and the Claude Code
+2026-08-01 · Companion to the Operating Manual v1.2 and the Claude Code
 Handover
 
 **1. What this actually protects against**
