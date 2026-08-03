@@ -521,6 +521,25 @@ threshold. The default of 3% comes from those eight pages — the page with
 fourteen disagreements sat at 5%, the clean ones at 0–2%. Two points is
 thin evidence; raise it if the second engine keeps confirming the first.
 
+**What counts as too poor to translate.** Not a judgement call, because
+the measurements already exist. tr-ocrtext reports the share of tokens
+Tesseract scored below its confidence floor; ocr-check.py reports the
+share of doubtful words and the number disagreements between the two
+engines.
+
+| Measure | Proceed | Inspect | Stop |
+|---|---|---|---|
+| Unreadable tokens (tr-ocrtext) | under 5% | 5–20% | 20% or more |
+| Doubtful words (ocr-check.py) | under 3% | 3–10% | over 10% |
+| Number disagreements (ocr-check.py) | none | **any at all — a person reads that page** | — |
+
+The third row is deliberately not a rate. A page can be 99% clean and
+still carry one wrong digit in an amount, and nothing downstream can
+catch it, so a disagreement is not a reason to stop the project — it is a
+page that gets read against the original. The first two thresholds come
+from eight pages of two real documents and are starting points with a
+stated basis, not laws. The Phase 1 files measured 1% and 3%.
+
 The earlier figure of 6.7 minutes a page, and the caveat that only a
 clean render had been tested, both belonged to qwen3.6 and are
 superseded. The smaller purpose-built model is roughly thirty times
