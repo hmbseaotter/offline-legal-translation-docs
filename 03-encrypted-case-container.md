@@ -1,6 +1,6 @@
 **Encrypted Case Container — Options, Setup, and Trade-offs**
 
-2026-08-01 · Companion to the Operating Manual v1.2 and the Claude Code
+2026-08-02 · Companion to the Operating Manual v1.3 and the Claude Code
 Handover
 
 **1. What this actually protects against**
@@ -36,7 +36,9 @@ command and refuses to launch while the container is mounted.
 >
 > ┌──────────────────────────────────────────────────────────┐
 >
-> │ BLOCKED: the case container is mounted at ~/translate
+> │ BLOCKED: the case container is mounted at
+>
+> │    ~/translation-work/confidential-projects
 >
 > │
 >
@@ -48,12 +50,18 @@ command and refuses to launch while the container is mounted.
 >
 > │ Close it first: case-close
 >
+> │ Then start from the kit directory (outside ~/translation-work)
+>
 > └──────────────────────────────────────────────────────────┘
 
-The wrapper blocks on three conditions, all verified working: the
-container is mounted; the working directory sits inside the data path;
-or the working directory is a parent of it, which is what happens if you
-start a session from your home directory.
+The wrapper makes three checks, all verified working. It refuses if the
+container is mounted. It refuses if the data directory is not a mount but
+holds files anyway — which means case material is sitting unencrypted
+outside the container, and closing the container cannot hide it. And it
+refuses if the working directory sits inside the data path or is a parent
+of it, which is what happens if you start a session from your home
+directory. The three exit with distinct codes (3, 5 and 4) so a script
+can tell them apart.
 
 Forgetting now produces a refusal instead of a silent exposure. That is
 the whole argument for doing this.
@@ -108,9 +116,9 @@ encrypted external drive as the backup target.
 Roughly fifteen minutes, most of it choosing a passphrase. The kit now
 includes five scripts that do the work.
 
-**4.1 If ~/translate already exists with data**
+**4.1 If a plaintext work directory already exists**
 
-Move it aside first. case-init refuses to run over an existing directory
+Move it aside first — `~/translate` was the layout before the container, so a machine set up earlier may still have one. case-init refuses to run over an existing directory
 with contents.
 
 > **mv** ~/translate ~/translation-work/plain-backup
@@ -186,6 +194,21 @@ The wrapper resolves the real binary by skipping itself in the PATH
 search, so it cannot recurse. If it cannot find the real claude it exits
 rather than failing open.
 
+The PATH wrapper only covers the terminal. The desktop application is
+launched from a .desktop entry as /usr/bin/claude-desktop and runs its
+own bundled copy of Claude Code out of ~/.config/Claude/, so nothing on
+PATH is consulted and case-guard never sees it. That left one hole in the
+mutual exclusion, and it is the one that actually happened: opening the
+container and then starting the desktop app. case-guard-desktop closes
+it, installed through a user .desktop file that shadows the system one,
+so the launcher, the dock and the claude:// handler all go through it.
+
+> **tools/install-desktop-guard.sh** *\# writes the .desktop override*
+
+There is no terminal behind a GUI launch, so the refusal appears as a
+dialog rather than on stdout. Test it with case-guard-desktop --check,
+which prints the decision and shows nothing on screen.
+
 **4.5 Daily use**
 
 > **case-status** *\# open or closed? safe to start a session?*
@@ -202,6 +225,28 @@ case-close reports which processes still hold files open rather than
 failing with a bare "target is busy", which during a multi-day batch is
 the difference between a useful message and a puzzle. With fingerprint
 sudo already configured, each of these is a touch of the reader.
+
+**Closing does not delete anything.** Closing the container unmounts a
+filesystem; it does not empty one. Everything written during a session is
+still inside the container file, encrypted, and comes back exactly as it
+was at the next case-open. The mountpoint looks empty only because
+nothing is mounted there.
+
+The corollary is that nothing ever leaves on its own. A matter that is
+finished, delivered and paid for still occupies the container, in full,
+until somebody removes it by hand — open the container and delete the
+project directory. That is deliberate: no script deletes client work. But
+it means retention is a decision you have to make rather than one the
+system makes for you, and material you no longer have a reason to hold is
+material you are still holding.
+
+> **case-open**
+>
+> **rm** -rf ~/translation-work/confidential-projects/kranj-2024
+
+Sparse file, so the container does not shrink on disk when a project is
+removed; the space is reused by the next one. Check what is there with
+case-status, which lists each project and its file counts.
 
 **5. Trade-offs, honestly**
 

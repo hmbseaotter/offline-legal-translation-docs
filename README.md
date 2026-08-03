@@ -17,7 +17,7 @@ None of these documents contain case material. Claude Code may read them.
 
 | File | What it covers |
 |---|---|
-| `01-operating-manual` | **Start here.** Full operating manual v1.2: layout, setup, per-format handling, the Phase 1 decision experiment, daily commands, lint report, troubleshooting, environment variables, decisions register. |
+| `01-operating-manual` | **Start here.** Full operating manual v1.3: layout, setup, per-format handling, the Phase 1 decision experiment, daily commands, lint report, troubleshooting, environment variables, decisions register. |
 | `02-claude-code-handover` | Where work runs, the confidentiality boundary for Claude Code sessions, guard configuration, the task list with acceptance criteria, and what must never enter a session. |
 | `03-encrypted-case-container` | Options, setup, and honest trade-offs for the LUKS container; the `claude` guard that makes the boundary structural rather than remembered. |
 
@@ -63,19 +63,32 @@ to send to the client.
 ## Open items (manual §14)
 
 - Measure the 7,000-row spreadsheet: `tr-xlsx <file> --survey`
-- Exercise a full open/close cycle with a project in the container before
-  real data goes near it. The container now exists and is verified closed
+- Exercise a full open/close cycle with a project in the container. The
+  container is in use; what remains is a translate-and-deliver pass
 - Copy `~/.case/header.bak` off this machine — a corrupted LUKS header
   means the data is gone even with the correct passphrase
-- Decide which pages earn the vision cross-check, and test it on a real scan
+- Calibrate the vision gate on more than the two pages behind its 3% default
 - Establish how often the model completes a statutory provision from memory
 - Seed the translation memory from the translator's prior work
 - Verify German quality against base Gemma before extending to that pair
 - Re-measure language detection on legal text; the quoted figures come from
   UDHR, which is thin and general-register (`tools/calibrate_lang.py`)
-- Settle the professional questions with the certifying translator
+- Run Phase 1 on a real subset and record the edit-vs-scratch ratio
 
-The last item gates everything else.
+The certifying translator's questions are settled — the answers are in
+manual §13. Phase 1 is now the item that gates the rest.
+
+## Closing the container does not empty it
+
+`case-close` unmounts a filesystem; it does not delete one. Everything
+written during a session stays inside the container file, encrypted, and
+returns unchanged at the next `case-open`. The mountpoint looks empty only
+because nothing is mounted there.
+
+The corollary is retention: a finished matter stays in the container at
+full size until someone opens it and removes the project directory by
+hand. No script deletes client work, so material you no longer have a
+reason to hold is material you are still holding. Container document §4.5.
 
 ## Two things a reader should know early
 

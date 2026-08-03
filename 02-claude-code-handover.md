@@ -1,6 +1,6 @@
 **Handover — Moving Build Work to Claude Code**
 
-2026-08-01 · Companion to the Operating Manual v1.2 · Read S2 before
+2026-08-02 · Companion to the Operating Manual v1.3 · Read S2 before
 starting a session
 
 **1. Where things run**

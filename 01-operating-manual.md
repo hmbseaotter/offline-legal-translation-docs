@@ -1,10 +1,10 @@
 **Offline Legal Translation — Operating Manual**
 
-Version 1.2 · 2026-08-01 · EN↔SL (DE later) · hpelitebook8g1i16, Ubuntu
+Version 1.3 · 2026-08-02 · EN↔SL (DE later) · hpelitebook8g1i16, Ubuntu
 26.04
 
 This document consolidates and replaces the Hardware Assessment,
-Workflow Architecture, and Addenda 1 and 2. Version 1.2 revises it for
+Workflow Architecture, and Addenda 1 and 2. Version 1.3 revises it for
 the multi-project confidential layout, the encrypted container, and the
 Claude Code project location. Everything currently believed correct is
 here.
@@ -21,7 +21,7 @@ Everything is arranged around that measurement. Section 6 is the
 experiment that decides whether to proceed; nothing beyond it should be
 built until that number is known.
 
-**1.1 The four commands you will use most**
+**1.1 The commands you will use most**
 
 | **Command**      | **Purpose**                                             |
 |------------------|---------------------------------------------------------|
@@ -486,35 +486,48 @@ date or an amount arrives looking entirely correct.
 >
 > **tr-pdf** source/zapisnik.pdf translated/zapisnik.docx
 
-Check names, dates, case numbers, amounts, and the characters č, š, ž
-specifically. Mangled diacritics can still produce valid Slovene words,
-so no spell-check will catch them. OCR output is cached, so stage 2 does
-not re-run it.
+Check names, dates, case numbers and amounts against the page.
+Diacritics matter less than they look: a dropped caron usually leaves a
+non-word that Slovene spell-check flags, and the residue is the handful
+of pairs that are both real words. Numbers have no such safety net — a
+misread digit is a perfectly well-formed token, so nothing downstream
+will ever question it. Words Tesseract could not read at all are already
+marked OCR_ILLEGIBLE by tr-ocrtext, which keeps the per-word confidence
+that pdftotext throws away. OCR output is cached, so stage 2 does not
+re-run it.
 
-A second engine is worth adding if scan quality is poor. A vision model
+A second engine is the only check on a misread digit. A vision model
 reads a page by a completely different mechanism than Tesseract, so their
-failure modes are largely uncorrelated. Run both, compare only the
-numbers, dates, and capitalized tokens, and inspect where they disagree.
+failure modes are largely uncorrelated: where both produce the same
+number it is almost certainly right, and where they differ one of them is
+wrong. ocr-check.py runs both over the same pages and reports only counts
+— never document text — so its output is safe to discuss outside the
+container.
 
-**Vision input works.** The installed Qwen model transcribed a rendered
-Slovene legal page at 97.3% against the page's own text layer, with every
-case number, amount, date and diacritic exact. The 2.7% shortfall was the
-model being right where the comparison was wrong: it read the evidence
-table as a table, keeping Datum with its date and Znesek with its amount,
-where pdftotext flattened the headers into one column and the values into
-another. For a document where a figure must stay bound to its label, that
-is the difference that matters.
+**Measured on real evidence.** deepseek-ocr:3b against Tesseract over
+eight pages of two scanned prosecution documents. Diacritics agreed
+almost exactly (64/64, 72/72, 83/83 on the pages carrying most of them),
+which settles whether a 3B model reads Slovene. Numbers are where it
+earns its keep: on seven pages the two engines agreed on every number,
+and on the eighth — the one page also carrying 27 low-confidence words
+and four hand-filled digit tokens — they disagreed on fourteen, none
+explainable as a formatting difference.
 
-It costs about 6.7 minutes a page, against seconds for Tesseract. So the
-cross-check is affordable on the pages that carry the risk — those with
-case numbers, dates and amounts, or where Tesseract's own confidence is
-low — and not affordable across a whole corpus. Which pages is the open
-question; whether it works is not.
+It costs about 3 minutes a page against seconds for Tesseract, so it is
+affordable on the pages that carry the risk and not across a whole
+corpus. That is what --gate decides: the vision pass runs only where the
+share of Tesseract words below the confidence floor reaches the
+threshold. The default of 3% comes from those eight pages — the page with
+fourteen disagreements sat at 5%, the clean ones at 0–2%. Two points is
+thin evidence; raise it if the second engine keeps confirming the first.
 
-One caveat before relying on it: the page tested was a clean render, not
-a scan. Skew, speckle, stamps and handwriting are untested.
+The earlier figure of 6.7 minutes a page, and the caveat that only a
+clean render had been tested, both belonged to qwen3.6 and are
+superseded. The smaller purpose-built model is roughly thirty times
+faster on the same page and has now been run on real scans, skew, stamps
+and handwriting included.
 
-> **ollama** run qwen3.6 "Transcribe this page verbatim." ./page.png
+> **ocr-check.py** source/zapisnik.pdf --pages 2 *\# both engines, then compare*
 
 **6. Phase 1 — the experiment that decides everything**
 
@@ -551,6 +564,23 @@ one fixable error class — say, untranslated case numbers — is a
 different verdict than the same ratio caused by systematically wrong
 register.
 
+tools/phase1-setup.sh runs the whole sequence rather than leaving it to
+be reassembled from these steps. It expects two sets of three pages
+prepared beforehand — source/phase1/mt/ to be machine-drafted and
+source/phase1/scratch/ translated cold — and it refuses to continue past
+the OCR stage until the text layer has been looked at, because on a
+corpus of scans an unverified draft measures Tesseract rather than the
+tooling. The two sets must not share content: whichever is done second is
+faster for having been read already, and the ratio would record that
+instead.
+
+> **tools/phase1-setup.sh**
+
+Record the timings in tools/phase1-tally.tsv, which holds minutes per
+page and a reason for each edit — terminology, register, numbers,
+additions, OCR — and no document text, so it can be discussed outside
+the container.
+
 **7. Daily operation**
 
 > **case-open** *\# unlock the container*
@@ -575,6 +605,15 @@ register.
 >
 > **case-close** *\# lock up when finished*
 
+**Closing does not delete anything.** case-close unmounts the container;
+it does not empty it. Every source, draft and memory entry is still
+inside the container file and returns unchanged at the next case-open —
+the mountpoint only looks empty because nothing is mounted there. The
+other half of that is retention: a finished matter stays in the container
+at full size until someone opens it and deletes the project directory by
+hand. No script removes client work, so deciding when a matter should
+stop being held is a manual step (container document S4.5).
+
 tr-run is resumable at two levels. It skips files already present in
 translated/, and within a file every segment already in the memory is
 reused rather than regenerated. Interrupting it costs at most one
@@ -587,7 +626,7 @@ change TR_PROMPT_VERSION, which is part of the cache key:
 
 > **rm** translated/ovadba.docx && **tr-run** *\# reuse memory*
 >
-> TR_PROMPT_VERSION=v2 **tr-run** *\# ignore memory, retranslate*
+> TR_PROMPT_VERSION=v5 **tr-run** *\# ignore memory, retranslate*
 
 **8. The lint report**
 
@@ -769,7 +808,7 @@ not held at full charge continuously:
 | TR_SRC / TR_TGT   | sl / en                                  | Per-project, in project.conf. Use de for German             |
 | TR_SUFFIX         | (empty)                                  | Per-project, in project.conf. Set if the client requires it |
 | TR_NUM_CTX        | 8192                                     | Context window. Lower if memory is tight                    |
-| TR_PROMPT_VERSION | v1                                       | Part of the cache key. Bump to force retranslation          |
+| TR_PROMPT_VERSION | v4                                       | Part of the cache key. Bump to force retranslation          |
 | TR_OCR_LANGS      | slv+eng                                  | Tesseract languages. Add deu for German                     |
 | TR_OLLAMA         | http://127.0.0.1:11434                   | Ollama endpoint                                             |
 | TR_DICTS          | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with |
@@ -778,6 +817,11 @@ not held at full charge continuously:
 | TR_NO_REEXEC      | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail |
 | CASE_IMG          | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status |
 | CASE_MAP          | casedata                                 | Device-mapper name while the container is unlocked          |
+| TR_VISION_MODEL   | deepseek-ocr:3b                          | Second OCR engine used by ocr-check.py. qwen3.6 is the fallback |
+| TR_VISION_PROMPT  | Extract the text in the image.           | Prompt for that model. It transcribes; it does not follow instructions |
+| TR_OCR_MIN_CONF   | 40                                       | Tesseract confidence floor in tr-ocrtext. Below it, a word is marked unreadable |
+| TR_ILLEGIBLE_MARK | OCR_ILLEGIBLE                            | What tr-ocrtext writes in place of a word it could not read |
+| CLAUDE_DESKTOP_BIN | /usr/bin/claude-desktop                 | The real binary case-guard-desktop launches once it has checked the mount |
 | CASE_MNT          | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks |
 
 For a German matter, set the pair once in that project’s project.conf
@@ -820,7 +864,7 @@ on a German sample before relying on GaMS3 for that pair.
 | Files not in the source language | Excluded from work and billing | Which is why triage tracks them: `by-lang/*.txt` locates them so they can be pulled out before translation starts |
 | Quoted provisions     | Render only what is present | Never completed from the instrument's official text. Where no established translation exists the source is left with a visible marker, and the translator supplies the wording |
 | Acronym expansion     | Footnote, not inline       | Expanding `KZ-1` in the body harms readability and spacing. A footnote mark carries the full form |
-| Illegible source      | `[ILLEGIBLE]`              | Confirmed as the convention |
+| Illegible source      | `OCR_ILLEGIBLE`            | The translator confirmed the convention; the spelling then changed. `[ILLEGIBLE]` cannot be selected with a double-click, because word selection stops at the brackets and leaves them behind after a paste — an unwelcome complication for the person replacing every one of them by hand. `OCR_ILLEGIBLE` selects whole, since underscore is a word character, and unlike `_ILLEGIBLE_` it has no leading or trailing underscore for Word or LibreOffice to autoformat into underlining. Override with `TR_ILLEGIBLE_MARK` |
 | Certification         | Batch form, stamp on paper | No per-document certification block. `.docx` primary, `.pdf` acceptable, `.xlsx` for tables since text formats handle them poorly |
 | Language pairs        | sl, en, de — all six directions | German is not needed yet but will be. Every one of the three can be source or target |
 | Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. Encrypted swap is the cheapest of the remaining mitigations if the risk is revisited |
@@ -833,25 +877,24 @@ on a German sample before relying on GaMS3 for that pair.
 - Measure the 7,000-row spreadsheet with tr-xlsx --survey. The unique
   ratio determines whether it is hours or days.
 
-- Exercise open, close and the guard on the container before real data
-  goes near it. The container now exists — LUKS2, 40 GB sparse, header
-  backed up to ~/.case/header.bak — and has been verified closed, with
-  the bare mountpoint made immutable so a stray write cannot land there.
-  What has not been exercised is a full cycle with a project in it.
+- Exercise a full open/close cycle with a project in the container. The
+  container exists — LUKS2, 40 GB sparse, header backed up to
+  ~/.case/header.bak — has been opened and closed repeatedly with a real
+  project in it, and both guards have been seen to refuse. The bare
+  mountpoint is immutable so a stray write cannot land there. What
+  remains is a full translate-and-deliver pass, which Phase 1 provides.
 
 - Copy ~/.case/header.bak somewhere off this machine. A corrupted LUKS
   header means the data is unrecoverable even with the correct
   passphrase, because the header holds the encrypted master key.
 
-- Decide whether the vision model earns a place in the OCR stage. It
-  works — 97.3% on a rendered page, every case number, amount, date and
-  diacritic exact, and it read a table correctly where the PDF text layer
-  did not (S5.3). It costs about 6.7 minutes a page, so the question is
-  which pages, not whether.
-
-- Test the vision model on a real scan. The page it read was a clean
-  render; evidence arrives skewed, speckled and stamped, and nothing
-  here shows how it behaves on that.
+- Calibrate the vision gate on more than two pages. The vision model has
+  earned its place: over eight pages of real scans it agreed with
+  Tesseract on every number except on the one page where fourteen
+  disagreed, and that page was also the one Tesseract itself was least
+  sure of (S5.3). --gate now defaults to 3%, drawn from a 5%-doubtful
+  page that needed the check and 0–2% pages that did not. More pages
+  would firm that line up.
 
 - Establish how often the model completes a statutory provision from
   memory (S8.1). Two of ten well-known provisions, both ECHR article 6,
