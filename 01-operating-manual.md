@@ -620,8 +620,20 @@ reused rather than regenerated. Interrupting it costs at most one
 segment. Re-running after editing the glossary is cheap for the same
 reason.
 
-A file is re-translated only if its source is newer than its output. To
-force a redo, delete the output. To force a redo ignoring the memory,
+A file is re-translated if its source is newer than its output, or if the
+existing output was produced by a different model or a superseded prompt.
+tr-run records which model and prompt version wrote each deliverable in
+work/deliverables.tsv and compares them on the next run, printing a redo
+line that names both.
+
+That second condition was missing until it mattered. TR_PROMPT_VERSION is
+part of the memory's key, so bumping it invalidates every cached segment -
+but tr-run skipped the whole file on mtime alone, before the memory was
+ever consulted, so a bump changed nothing and the superseded drafts stood.
+A prompt correction followed by a re-run reported three files skipped in
+three seconds and left the defective drafts in place.
+
+To force a redo, delete the output. To force a redo ignoring the memory,
 change TR_PROMPT_VERSION, which is part of the cache key:
 
 > **rm** translated/ovadba.docx && **tr-run** *\# reuse memory*
