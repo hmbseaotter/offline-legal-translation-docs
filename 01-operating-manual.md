@@ -799,30 +799,31 @@ not held at full charge continuously:
 | Diacritics wrong in OCR          | Confirm -l slv+eng was used. Set TR_OCR_LANGS if the pair differs                                             |
 
 **12. Environment variables**
-
-| **Variable**      | **Default**                              | **Purpose**                                                 |
-|-------------------|------------------------------------------|-------------------------------------------------------------|
-| TR_PROJECTS       | ~/translation-work/confidential-projects | Container root holding all projects                         |
-| TR_ROOT           | (active project)                         | Override to target one project for a single command         |
-| TR_MODEL          | gams3:q8                                 | Model alias used by every script                            |
-| TR_SRC / TR_TGT   | sl / en                                  | Per-project, in project.conf. Use de for German             |
-| TR_SUFFIX         | (empty)                                  | Per-project, in project.conf. Set if the client requires it |
-| TR_NUM_CTX        | 8192                                     | Context window. Lower if memory is tight                    |
-| TR_PROMPT_VERSION | v4                                       | Part of the cache key. Bump to force retranslation          |
-| TR_OCR_LANGS      | slv+eng                                  | Tesseract languages. Add deu for German                     |
-| TR_OLLAMA         | http://127.0.0.1:11434                   | Ollama endpoint                                             |
-| TR_DICTS          | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with |
-| TR_OCR_SAMPLE_LANGS | slv+hrv+eng                            | Tesseract languages for the detection sampling pass on scanned PDFs |
-| TR_VENV           | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere |
-| TR_NO_REEXEC      | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail |
-| CASE_IMG          | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status |
-| CASE_MAP          | casedata                                 | Device-mapper name while the container is unlocked          |
-| TR_VISION_MODEL   | deepseek-ocr:3b                          | Second OCR engine used by ocr-check.py. qwen3.6 is the fallback |
-| TR_VISION_PROMPT  | Extract the text in the image.           | Prompt for that model. It transcribes; it does not follow instructions |
-| TR_OCR_MIN_CONF   | 40                                       | Tesseract confidence floor in tr-ocrtext. Below it, a word is marked unreadable |
-| TR_ILLEGIBLE_MARK | OCR_ILLEGIBLE                            | What tr-ocrtext writes in place of a word it could not read |
-| CLAUDE_DESKTOP_BIN | /usr/bin/claude-desktop                 | The real binary case-guard-desktop launches once it has checked the mount |
-| CASE_MNT          | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks |
+<!-- GENERATED:env -->
+| Variable            | Default                                  | Purpose                                                                              |
+|---------------------|------------------------------------------|--------------------------------------------------------------------------------------|
+| TR_PROJECTS         | ~/translation-work/confidential-projects | Container root holding all projects                                                  |
+| TR_ROOT             | (active project)                         | Override to target one project for a single command                                  |
+| TR_MODEL            | gams3:q8                                 | Model alias used by every script                                                     |
+| TR_SRC / TR_TGT     | sl / en                                  | Per-project, in project.conf. Use de for German                                      |
+| TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Set if the client requires it                          |
+| TR_NUM_CTX          | 8192                                     | Context window. Lower if memory is tight                                             |
+| TR_PROMPT_VERSION   | v4                                       | Part of the cache key. Bump to force retranslation                                   |
+| TR_OCR_LANGS        | slv+eng                                  | Tesseract languages. Add deu for German                                              |
+| TR_OLLAMA           | http://127.0.0.1:11434                   | Ollama endpoint                                                                      |
+| TR_DICTS            | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with        |
+| TR_OCR_SAMPLE_LANGS | slv+hrv+eng                              | Tesseract languages for the detection sampling pass on scanned PDFs                  |
+| TR_VENV             | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere |
+| TR_NO_REEXEC        | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail      |
+| CASE_IMG            | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status                   |
+| CASE_MAP            | casedata                                 | Device-mapper name while the container is unlocked                                   |
+| TR_VISION_MODEL     | deepseek-ocr:3b                          | Second OCR engine used by ocr-check.py. qwen3.6 is the fallback                      |
+| TR_VISION_PROMPT    | Extract the text in the image.           | Prompt for that model. It transcribes; it does not follow instructions               |
+| TR_OCR_MIN_CONF     | 40                                       | Tesseract confidence floor in tr-ocrtext. Below it, a word is marked unreadable      |
+| TR_ILLEGIBLE_MARK   | OCR_ILLEGIBLE                            | What tr-ocrtext writes in place of a word it could not read                          |
+| CLAUDE_DESKTOP_BIN  | /usr/bin/claude-desktop                  | The real binary case-guard-desktop launches once it has checked the mount            |
+| CASE_MNT            | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks                        |
+<!-- /GENERATED:env -->
 
 For a German matter, set the pair once in that project’s project.conf
 rather than on the command line, so every later run inherits it:
