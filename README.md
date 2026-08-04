@@ -19,9 +19,10 @@ None of these documents contain case material. Claude Code may read them.
 |---|---|
 | `01-operating-manual` | **Start here.** Full operating manual v1.3: layout, setup, per-format handling, the Phase 1 decision experiment, daily commands, lint report, troubleshooting, environment variables, decisions register. |
 | `02-claude-code-handover` | Where work runs, the confidentiality boundary for Claude Code sessions, guard configuration, the task list with acceptance criteria, and what must never enter a session. |
+| `04-runbook` | **The procedure, step by step.** What to run, in what order, and what to look at between steps — plus usage and flags for every command. Generated: Part 1's prose lives in the kit at `docs-src/`, Part 2 is read out of the tools, so a flag cannot exist without appearing here. Markdown only; editing it directly is overwritten. |
 | `03-encrypted-case-container` | Options, setup, and honest trade-offs for the LUKS container; the `claude` guard that makes the boundary structural rather than remembered. |
 
-Each is provided as `.docx` (primary), `.pdf`, and `.md`.
+01–03 are provided as `.docx` (primary), `.pdf` and `.md`. `04-runbook` is generated, so its `.md` is the primary and only form — regenerate with `tools/gen-docs.py --apply`.
 
 ---
 
@@ -41,6 +42,8 @@ their instructions; paths and recommendations in them are out of date.
 
 ## Reading order for someone new to this
 
+0. `04-runbook` — if you just need to get the work done, this is the whole
+   procedure and nothing else is required reading
 1. `01-operating-manual` §1 — what the system is and the one number that judges it
 2. `03-encrypted-case-container` §1–2 — why the data is where it is
 3. `02-claude-code-handover` §2 — the boundary, before opening any session
