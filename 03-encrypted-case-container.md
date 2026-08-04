@@ -229,9 +229,15 @@ nothing checked.
 >
 > **case-open** *\# unlock and mount*
 >
-> **case-close** *\# unmount and lock*
+> **cd** ~ && **case-close** *\# unmount and lock*
 >
 > **case-close** -f *\# force, when a batch is still running*
+
+`cd` out first, and not for tidiness. A shell whose working directory is
+inside the container keeps the filesystem busy exactly as an open file does.
+The kernel makes no distinction, and **-f does not help** — it forces past
+processes holding files, not past a working directory. Closing from inside
+the project directory fails either way; leaving it first always works.
 
 case-close reports which processes still hold files open rather than
 failing with a bare "target is busy", which during a multi-day batch is

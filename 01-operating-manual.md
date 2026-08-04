@@ -521,6 +521,12 @@ threshold. The default of 3% comes from those eight pages — the page with
 fourteen disagreements sat at 5%, the clean ones at 0–2%. Two points is
 thin evidence; raise it if the second engine keeps confirming the first.
 
+`tr-ocrstat` answers this for a whole corpus rather than one file: it
+reports the unreadable-token rate per PDF, worst first, against the
+thresholds below, and exits non-zero if anything is in the stop band. Use it
+before `tr-run`; use `ocr-check.py` on the individual pages whose numbers
+carry weight.
+
 **What counts as too poor to translate.** Not a judgement call, because
 the measurements already exist. tr-ocrtext reports the share of tokens
 Tesseract scored below its confidence floor; ocr-check.py reports the
@@ -909,17 +915,6 @@ on a German sample before relying on GaMS3 for that pair.
 - Measure the 7,000-row spreadsheet with tr-xlsx --survey. The unique
   ratio determines whether it is hours or days.
 
-- Exercise a full open/close cycle with a project in the container. The
-  container exists — LUKS2, 40 GB sparse, header backed up to
-  ~/.case/header.bak — has been opened and closed repeatedly with a real
-  project in it, and both guards have been seen to refuse. The bare
-  mountpoint is immutable so a stray write cannot land there. What
-  remains is a full translate-and-deliver pass, which Phase 1 provides.
-
-- Copy ~/.case/header.bak somewhere off this machine. A corrupted LUKS
-  header means the data is unrecoverable even with the correct
-  passphrase, because the header holds the encrypted master key.
-
 - Calibrate the vision gate on more than two pages. The vision model has
   earned its place: over eight pages of real scans it agreed with
   Tesseract on every number except on the one page where fourteen
@@ -937,10 +932,11 @@ on a German sample before relying on GaMS3 for that pair.
 - Verify German quality against base Gemma before extending to that pair
   (S12).
 
-- Run Phase 1 on a small subset of the real assignment. The translator's
-  preference: real material, so no work is wasted. This is now the gating
-  item — the professional questions are answered and recorded in §13.
-
+- Quantify how much machine assistance helps. Phase 1 ran and the
+  translator's verdict was that it does help, which settled whether to
+  proceed — but the ratio itself, and the per-class edit counts that say
+  *what* to fix next, were never recorded. The quote still rests on
+  source-word volume rather than a measured editing speedup.
 - While editing the Phase 1 pages, tally *why* each edit was made:
   terminology, register, numbers, additions, omission, formatting. The ratio
   says whether to proceed; the tally says whether a poor ratio is fixable.
