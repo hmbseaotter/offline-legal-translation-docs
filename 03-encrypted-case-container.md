@@ -209,6 +209,18 @@ There is no terminal behind a GUI launch, so the refusal appears as a
 dialog rather than on stdout. Test it with case-guard-desktop --check,
 which prints the decision and shows nothing on screen.
 
+**Confirm both guards are installed, rather than assuming it.** `case-status`
+now reports each one, and both must read `installed`:
+
+> **case-status**
+
+This exists because the assumption failed. The wrapper makes the boundary
+structural instead of remembered — but running the installer was itself
+remembered, and on this machine it was not done. The terminal guard was in
+place, the desktop guard was never installed, and Claude Desktop launched
+with the container mounted. Every document said the boundary was closed;
+nothing checked.
+
 **4.5 Daily use**
 
 > **case-status** *\# open or closed? safe to start a session?*
