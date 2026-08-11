@@ -109,7 +109,7 @@ against the source. Manual §8.1.
 
 ## Where things live
 
-The kit is a git repository — `offline-translation-kit`, private on GitHub —
-and these documents are `offline-translation-docs`. Clone the kit; do not
+The kit is a git repository — `offline-legal-translation`, public on GitHub —
+and these documents are `offline-legal-translation-docs`. Clone the kit; do not
 unpack it from an archive. A copy without `.git` cannot have the hook that
 keeps client documents out of the repository.

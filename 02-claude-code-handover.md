@@ -110,7 +110,7 @@ excerpt yourself before pasting.
 >
 > **mkdir** -p "\$KIT"
 >
-> **git clone** git@github.com:hmbseaotter/offline-translation-kit.git "\$KIT"
+> **git clone** git@github.com:hmbseaotter/offline-legal-translation.git "\$KIT"
 >
 > **chmod** +x "\$KIT"/bin/\*
 >
