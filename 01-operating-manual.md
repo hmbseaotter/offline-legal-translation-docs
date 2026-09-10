@@ -725,6 +725,7 @@ alongside the drafts.
 |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | FAIL      | The segment errored out and contains no translation. Fix and re-run first                                                                     |
 | NUM       | A number in the source is absent from the target, or a number appears that was not in the source. Highest consequence class in legal evidence |
+| LONG      | The target is far longer than the source, or runs to several lines where the source is one: text the model added. On a bare heading that can be a whole invented paragraph. tr-run refuses such replies; this finds any already in a memory |
 | NONTR     | A string marked non-translatable was altered or dropped                                                                                       |
 | INCON     | The same source sentence was translated two different ways. A corpus-level finding no per-document review will surface                        |
 | GLOSS     | An agreed glossary term was not used                                                                                                          |
@@ -937,10 +938,16 @@ Measured on this machine with invented English legal text: about 10
 seconds a segment over 42 requests, none failed, against 48 for GaMS3.
 Unlike GaMS3, most of that is generation, at 3 tokens a second, rather
 than reading the prompt, so batching short segments saves less. Two
-cautions from the same runs. A bare label is where the model invents:
-"Case number" once came back as a complete, fictitious German court
-reference. tr-lint reports that as a number not in the source, which is
-why its NUM findings come first. And no German draft has yet been
+cautions from the same runs. A bare label or heading is where the model
+invents: "Case number" came back as a fictitious German court reference,
+and the heading STATEMENT as a whole invented declaration. tr-run gives
+such a reply one firmer retry — a reply far longer than its source, or
+one carrying a number the source does not have. A reply still far too
+long after it is written as [TRANSLATION FAILED]; one still carrying an
+extra number is kept and reported by tr-lint as NUM, because "dva
+tedna" rendered as "2 weeks" adds a digit without adding anything false.
+Over eight number-prone labels, three replies invented something and
+none did after the retry. And no German draft has yet been
 reviewed by a translator.
 
 **13. Decisions and why**
