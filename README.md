@@ -72,7 +72,8 @@ to send to the client.
   means the data is gone even with the correct passphrase
 - Calibrate the vision gate on more than the two pages behind its 3% default
 - Establish how often the model completes a statutory provision from memory
-- Seed the translation memory from the translator's prior work
+- Measure reference-translation reuse on a real matter (`tr-ref`): how many
+  sentences are reused, and how often `pairs.tsv` needs correcting
 - Have a translator review English→German drafts: EuroLLM's speed is
   measured, its German output is not yet reviewed
 - Re-measure language detection on legal text; the quoted figures come from

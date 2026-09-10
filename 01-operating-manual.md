@@ -422,14 +422,38 @@ consistent, and without the 48 seconds a model call would cost.
 >
 > **print(trlib.is_translatable('I** K 12345/2024')) *\# expect False"*
 
-**4.4 Seed the memory with the translator’s prior work**
+**4.4 Reuse the translator’s prior work**
 
-The metric is edits this particular translator makes. If any prior EN↔SL
-legal translations exist, aligning them into the memory means drafts
-arrive already using their established renderings and register. A draft
-that matches their habits produces fewer corrections than an objectively
-similar draft that does not. This is probably the single highest-value
-input available and costs one conversation plus an alignment pass.
+The metric is edits this particular translator makes. A draft that
+matches their established renderings and register produces fewer
+corrections than an objectively similar draft that does not, so earlier
+translations are probably the single highest-value input available.
+
+They go in the project’s reference/ folder, one language a side, paired
+by path: reference/en/leases/lease-2023.docx beside
+reference/de/leases/lease-2023.pdf. Each side may be Word, PDF with a
+text layer, scanned PDF or plain text, whatever the other side is.
+tr-ref lines each pair up sentence by sentence without a model — by
+length, with the numbers both sides share as anchors — and keeps only
+one-to-one pairs whose numbers agree; a sentence with no number is kept
+only where its neighbours lined up one-to-one too. tr-run then gives an
+identical source sentence the translator’s rendering instead of a draft,
+and tr-terms --reference proposes the glossary from those renderings.
+
+Everything kept is listed in work/reference/pairs.tsv, to be read before
+the first run, because every line there can reach a deliverable word for
+word. Two kinds are never reused: a sentence the references translate
+differently (tr-ref --conflicts), and a translation read by OCR, whose
+misreadings would pass straight into the output — those count for
+terminology only. References stay in their project: memory never crosses
+matters, and a reference is a client’s document.
+
+On invented test documents a Word pair kept 12 of 14 sentence pairs and
+a Word-to-PDF pair 4 of 6; the rest were rejected rather than guessed. A
+reused sentence is not checked by tr-lint: it is the translator’s own
+work, and it never enters the translation memory. Harvesting terminology
+from references needs volume — on seventeen pairs tr-terms --reference
+proposes mostly noise.
 
 **5. Handling each source type**
 
@@ -942,6 +966,7 @@ reviewed by a translator.
 | Certification         | Batch form, stamp on paper | No per-document certification block. `.docx` primary, `.pdf` acceptable, `.xlsx` for tables since text formats handle them poorly |
 | Language pairs        | sl↔en and en↔de; sl↔de not yet | Every one of the three can be source or target. Slovene↔German has no model chosen and refuses to translate: the model researched for it is not installed, and pivoting through English doubles the error |
 | Prompt version        | Derived from the prompt text | A hand-bumped string invalidated every pair at once and could be forgotten. A hash of the text each pair is actually sent changes exactly when that text does. The two v6 texts keep the name v6, so existing memory stays valid |
+| Reference translations | Reused when identical and agreed | An identical source sentence takes the translator's own rendering with no model call. Only one-to-one pairs whose numbers agree are kept; disagreeing references and OCR-read translations are never reused verbatim. They stay in their project, because memory never crosses matters |
 | Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. One part of that has since been closed rather than accepted: OCR renders every page of a scan to a PNG, and on an all-scanned corpus that put the whole evidence bundle through /tmp — tmpfs, so RAM-backed and swappable to the plain 8 GB swapfile, and left behind entirely when a run is killed before its cleanup. Those renders now go to `<project>/work/tmp` inside the container (`trlib.case_tmpdir`). Encrypted swap is the cheapest of the remaining mitigations if the rest is revisited |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
 | Glossary layering     | Shared base + overlay      | Terminology is reusable; case specifics are not. Layering gets the benefit without the leak                                       |
@@ -964,7 +989,8 @@ reviewed by a translator.
   memory (S8.1). Two of ten well-known provisions, both ECHR article 6,
   is enough to know the risk is real and not enough to know its shape.
 
-- Seed the memory from the translator’s prior work if any exists (S4.4).
+- Measure reference reuse on a real matter: how many source sentences
+  are reused, and how often pairs.tsv needs correcting (S4.4).
 
 - Have a translator review English→German drafts. EuroLLM is measured for
   speed and ran without a failed request, but no German output has been

@@ -65,6 +65,21 @@ structure.** Filenames and the shape of the tree are reproduced in
 `translated/`, so the structure you create here is the structure you
 deliver. Do not flatten it.
 
+**Earlier translations, if the client has them.** Put each original under
+`reference/<TR_SRC>/` and its translation at the same path under
+`reference/<TR_TGT>/` — `reference/en/leases/lease-2023.docx` beside
+`reference/de/leases/lease-2023.pdf` — then:
+
+    tr-ref
+
+It lines the pairs up sentence by sentence, without a model, and `tr-run`
+then takes the reference translation for any source sentence identical to
+one it kept. Open `work/reference/pairs.tsv` before translating: every line
+in it can reach a deliverable word for word. Two kinds are never reused — a
+sentence the references translate differently (`tr-ref --conflicts` lists
+them), and a translation read by OCR, which counts for terminology only.
+References stay in this project; nothing reads another project's.
+
 **3. Classify every file by source language.**
 
     tr-inventory
@@ -197,6 +212,12 @@ way, and frequent terms worth pinning before they drift. The translator
 picks one rendering per line; the survivors go into `glossary/project.tsv`,
 or `_shared/glossary/base.tsv` if they are general legal vocabulary that
 should outlive this matter.
+
+Where the project has reference translations, harvest from those before the
+first `tr-run` — the candidates are then the translator's own renderings,
+and pinning them steers every draft instead of correcting it afterwards:
+
+    tr-terms --reference --pin-all
 
 **11. Re-run.** Pinning a term invalidates only the segments containing it,
 so this is minutes, not hours:
@@ -352,6 +373,17 @@ list, show, or switch the active confidential project.
 
     Usage:
 
+### `tr-ref`
+
+line up reference translations so their sentences are reused.
+
+    Usage:  tr-ref [--rebuild] [--conflicts]
+
+| Flag | Meaning |
+|---|---|
+| `--rebuild` | align every pair again, not only the ones that changed |
+| `--conflicts` | print the source sentences the references translate more than one way |
+
 ### `tr-run`
 
 translate everything in source/ that is not yet in translated/.
@@ -372,7 +404,7 @@ what is translated, what is missing, what is stale.
 
 find terms the model rendered inconsistently, and propose entries.
 
-    Usage:  tr-terms [--min-count N] [--top N] [--pin-all] [--write]
+    Usage:  tr-terms [--min-count N] [--top N] [--pin-all] [--write] [--reference]
 
 | Flag | Meaning |
 |---|---|
@@ -380,6 +412,7 @@ find terms the model rendered inconsistently, and propose entries.
 | `--top` | how many candidates to report (default 25) |
 | `--write` | append accepted lines to the project glossary |
 | `--pin-all` | propose an entry for every frequent term with a clear rendering, not only the ones already disagreeing |
+| `--reference` | read the sentence pairs tr-ref kept from reference translations, instead of the model's drafts |
 
 ### `tr-txt`
 
