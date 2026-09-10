@@ -1,13 +1,13 @@
 **Offline Legal Translation — Operating Manual**
 
-Version 1.3 · 2026-08-02 · EN↔SL (DE later) · hpelitebook8g1i16, Ubuntu
+Version 1.4 · 2026-09-10 · EN↔SL, EN↔DE · hpelitebook8g1i16, Ubuntu
 26.04
 
 This document consolidates and replaces the Hardware Assessment,
 Workflow Architecture, and Addenda 1 and 2. Version 1.3 revises it for
 the multi-project confidential layout, the encrypted container, and the
-Claude Code project location. Everything currently believed correct is
-here.
+Claude Code project location; version 1.4 adds English↔German. Everything
+currently believed correct is here.
 
 **1. What this system is**
 
@@ -244,10 +244,18 @@ Slovene depends on, and throughput is not a constraint here.
 >
 > **ollama** list *\# confirm gams3:q8 is present*
 
-The alias matters. Every script refers to gams3:q8, so switching models
-later is one tr-model invocation rather than an edit in eight places. It
-also pins num_ctx and temperature so behavior does not drift with an
-Ollama upgrade.
+The alias matters. Scripts refer to models by alias, chosen by language
+pair in one table in lib/trlib.py — gams3:q8 for Slovene↔English,
+eurollm9b-2512:q8 for English↔German — so switching a model later is one
+tr-model invocation and one line in that table, rather than an edit in
+eight places. It also pins num_ctx and temperature so behavior does not
+drift with an Ollama upgrade.
+
+English↔German needs its own model, because German is absent from
+GaMS3's training. Register it only on a machine that will take such a
+matter:
+
+> **tr-model** hf.co/mradermacher/EuroLLM-9B-Instruct-2512-GGUF:Q8_0 eurollm9b-2512:q8 *\# ~10 GB, once*
 
 > **Verify the tag at pull time.** The repository publishes both static
 > and imatrix-weighted quantizations and tag syntax occasionally
@@ -660,8 +668,13 @@ tr-run records which model and prompt version wrote each deliverable in
 work/deliverables.tsv and compares them on the next run, printing a redo
 line that names both.
 
-That second condition was missing until it mattered. TR_PROMPT_VERSION is
-part of the memory's key, so bumping it invalidates every cached segment -
+The prompt version is not typed by anyone. It is derived from the prompt
+text each language pair is actually sent, so editing prompts/translate.txt
+gives the pairs whose text changed a new version, and leaves the others
+alone. The Slovene↔English text in use since v6 keeps that name.
+
+That second condition was missing until it mattered. The prompt version is
+part of the memory's key, so a new one invalidates every cached segment -
 but tr-run skipped the whole file on mtime alone, before the memory was
 ever consulted, so a bump changed nothing and the superseded drafts stood.
 A prompt correction followed by a re-run reported three files skipped in
@@ -846,54 +859,68 @@ not held at full charge continuously:
 
 **12. Environment variables**
 <!-- GENERATED:env -->
-| Variable            | Default                                  | Purpose                                                                              |
-|---------------------|------------------------------------------|--------------------------------------------------------------------------------------|
-| TR_PROJECTS         | ~/translation-work/confidential-projects | Container root holding all projects                                                  |
-| TR_ROOT             | (active project)                         | Override to target one project for a single command                                  |
-| TR_MODEL            | gams3:q8                                 | Model alias used by every script                                                     |
-| TR_SRC / TR_TGT     | sl / en                                  | Per-project, in project.conf. Use de for German                                      |
-| TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Set if the client requires it                          |
-| TR_NUM_CTX          | 8192                                     | Context window. Lower if memory is tight                                             |
-| TR_PROMPT_VERSION   | v6                                       | Part of the cache key. Bump to force retranslation                                   |
-| TR_OCR_LANGS        | slv+eng                                  | Tesseract languages. Add deu for German                                              |
-| TR_OLLAMA           | http://127.0.0.1:11434                   | Ollama endpoint                                                                      |
-| TR_DICTS            | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with        |
-| TR_OCR_SAMPLE_LANGS | slv+hrv+eng                              | Tesseract languages for the detection sampling pass on scanned PDFs                  |
-| TR_VENV             | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere |
-| TR_NO_REEXEC        | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail      |
-| CASE_IMG            | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status                   |
-| CASE_MAP            | casedata                                 | Device-mapper name while the container is unlocked                                   |
-| TR_VISION_MODEL     | deepseek-ocr:3b                          | Second OCR engine used by ocr-check.py. qwen3.6 is the fallback                      |
-| TR_VISION_PROMPT    | Extract the text in the image.           | Prompt for that model. It transcribes; it does not follow instructions               |
-| TR_OCR_MIN_CONF     | 40                                       | Tesseract confidence floor in tr-ocrtext. Below it, a word is marked unreadable      |
-| TR_ILLEGIBLE_MARK   | OCR_ILLEGIBLE                            | What tr-ocrtext writes in place of a word it could not read                          |
-| CLAUDE_DESKTOP_BIN  | /usr/bin/claude-desktop                  | The real binary case-guard-desktop launches once it has checked the mount            |
-| CASE_MNT            | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks                        |
+| Variable            | Default                                  | Purpose                                                                                                                                                        |
+|---------------------|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| TR_PROJECTS         | ~/translation-work/confidential-projects | Container root holding all projects                                                                                                                            |
+| TR_ROOT             | (active project)                         | Override to target one project for a single command                                                                                                            |
+| TR_MODEL            | (by language pair)                       | Overrides the model chosen for the pair: gams3:q8 for sl↔en, eurollm9b-2512:q8 for en↔de, none for sl↔de. Set it in a project's project.conf, not in ~/.bashrc |
+| TR_SRC / TR_TGT     | sl / en                                  | Per-project, in project.conf. Any two of sl, en, de                                                                                                            |
+| TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Set if the client requires it                                                                                                    |
+| TR_NUM_CTX          | 8192                                     | Context window. Lower if memory is tight                                                                                                                       |
+| TR_PROMPT_VERSION   | (from the prompt text)                   | Override only. Derived per pair from the prompt text actually sent, so editing the prompt changes it; sl↔en is v6                                              |
+| TR_OCR_LANGS        | slv+eng                                  | Tesseract languages of the source documents: eng for an English drop, deu for German                                                                           |
+| TR_OLLAMA           | http://127.0.0.1:11434                   | Ollama endpoint                                                                                                                                                |
+| TR_DICTS            | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with                                                                                  |
+| TR_OCR_SAMPLE_LANGS | slv+hrv+eng                              | Tesseract languages for the detection sampling pass on scanned PDFs                                                                                            |
+| TR_VENV             | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere                                                                           |
+| TR_NO_REEXEC        | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail                                                                                |
+| CASE_IMG            | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status                                                                                             |
+| CASE_MAP            | casedata                                 | Device-mapper name while the container is unlocked                                                                                                             |
+| TR_VISION_MODEL     | deepseek-ocr:3b                          | Second OCR engine used by ocr-check.py. qwen3.6 is the fallback                                                                                                |
+| TR_VISION_PROMPT    | Extract the text in the image.           | Prompt for that model. It transcribes; it does not follow instructions                                                                                         |
+| TR_OCR_MIN_CONF     | 40                                       | Tesseract confidence floor in tr-ocrtext. Below it, a word is marked unreadable                                                                                |
+| TR_ILLEGIBLE_MARK   | OCR_ILLEGIBLE                            | What tr-ocrtext writes in place of a word it could not read                                                                                                    |
+| CLAUDE_DESKTOP_BIN  | /usr/bin/claude-desktop                  | The real binary case-guard-desktop launches once it has checked the mount                                                                                      |
+| CASE_MNT            | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks                                                                                                  |
 <!-- /GENERATED:env -->
 
-For a German matter, set the pair once in that project’s project.conf
-rather than on the command line, so every later run inherits it:
+For an English→German matter, set the pair once in that project’s
+project.conf rather than on the command line, so every later run
+inherits it:
 
-> **tr-project** --new berlin-2026
+> **tr-project** --new example-en-de
 >
 > **nano**
-> ~/translation-work/confidential-projects/berlin-2026/project.conf
+> ~/translation-work/confidential-projects/example-en-de/project.conf
 >
-> TR_SRC=de
+> TR_SRC=en
 >
-> TR_TGT=en
+> TR_TGT=de
 >
-> TR_OCR_LANGS=deu+eng
+> TR_OCR_LANGS=eng
 
-German is high-resource and well served by base Gemma; GaMS3 continual
-pre-training on Slovene may have eroded it. Compare against gemma3:12b
-on a German sample before relying on GaMS3 for that pair.
+Nothing else is set: the model follows the pair. GaMS3 translates
+Slovene↔English; EuroLLM-9B-Instruct-2512 (Q8_0) translates
+English↔German, because German is absent from every stage of GaMS3's
+training. tr-run names the model in its banner and refuses to start when
+it is not installed. Slovene↔German has no model chosen and refuses to
+translate.
+
+Measured on this machine with invented English legal text: about 10
+seconds a segment over 42 requests, none failed, against 48 for GaMS3.
+Unlike GaMS3, most of that is generation, at 3 tokens a second, rather
+than reading the prompt, so batching short segments saves less. Two
+cautions from the same runs. A bare label is where the model invents:
+"Case number" once came back as a complete, fictitious German court
+reference. tr-lint reports that as a number not in the source, which is
+why its NUM findings come first. And no German draft has yet been
+reviewed by a translator.
 
 **13. Decisions and why**
 
 | **Decision**          | **Chosen**                 | **Reason**                                                                                                                        |
 |-----------------------|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| Model                 | GaMS3-12B-Instruct         | Slovene-specific; outperforms base Gemma 3 12B on EN→SL and rivals GPT-4o on the Slovene arena                                    |
+| Model                 | GaMS3-12B-Instruct for sl↔en; EuroLLM-9B-Instruct-2512 for en↔de | GaMS3 is Slovene-specific; outperforms base Gemma 3 12B on EN→SL and rivals GPT-4o on the Slovene arena. German is absent from its training, so English↔German goes to EuroLLM, which covers every EU official language and has translation in its instruction tuning. The model is chosen by pair in trlib, so a German project cannot fall back to GaMS3 unnoticed |
 | Quantization          | Q8_0                       | Quantization damage is disproportionate for less-resourced languages; throughput is not a constraint                              |
 | No RAM upgrade        | 32 GB retained             | Workload is bandwidth-bound. More capacity adds no bandwidth and only enables slower, larger models                               |
 | Segment granularity   | Sentence                   | Matches the translator’s review unit and makes the memory reusable across documents                                               |
@@ -913,7 +940,8 @@ on a German sample before relying on GaMS3 for that pair.
 | Acronym expansion     | Footnote, not inline       | Expanding `KZ-1` in the body harms readability and spacing. A footnote mark carries the full form |
 | Illegible source      | `OCR_ILLEGIBLE`            | The translator confirmed the convention; the spelling then changed. `[ILLEGIBLE]` cannot be selected with a double-click, because word selection stops at the brackets and leaves them behind after a paste — an unwelcome complication for the person replacing every one of them by hand. `OCR_ILLEGIBLE` selects whole, since underscore is a word character, and unlike `_ILLEGIBLE_` it has no leading or trailing underscore for Word or LibreOffice to autoformat into underlining. Override with `TR_ILLEGIBLE_MARK` |
 | Certification         | Batch form, stamp on paper | No per-document certification block. `.docx` primary, `.pdf` acceptable, `.xlsx` for tables since text formats handle them poorly |
-| Language pairs        | sl, en, de — all six directions | German is not needed yet but will be. Every one of the three can be source or target |
+| Language pairs        | sl↔en and en↔de; sl↔de not yet | Every one of the three can be source or target. Slovene↔German has no model chosen and refuses to translate: the model researched for it is not installed, and pivoting through English doubles the error |
+| Prompt version        | Derived from the prompt text | A hand-bumped string invalidated every pair at once and could be forgotten. A hash of the text each pair is actually sent changes exactly when that text does. The two v6 texts keep the name v6, so existing memory stays valid |
 | Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. One part of that has since been closed rather than accepted: OCR renders every page of a scan to a PNG, and on an all-scanned corpus that put the whole evidence bundle through /tmp — tmpfs, so RAM-backed and swappable to the plain 8 GB swapfile, and left behind entirely when a run is killed before its cleanup. Those renders now go to `<project>/work/tmp` inside the container (`trlib.case_tmpdir`). Encrypted swap is the cheapest of the remaining mitigations if the rest is revisited |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
 | Glossary layering     | Shared base + overlay      | Terminology is reusable; case specifics are not. Layering gets the benefit without the leak                                       |
@@ -938,8 +966,9 @@ on a German sample before relying on GaMS3 for that pair.
 
 - Seed the memory from the translator’s prior work if any exists (S4.4).
 
-- Verify German quality against base Gemma before extending to that pair
-  (S12).
+- Have a translator review English→German drafts. EuroLLM is measured for
+  speed and ran without a failed request, but no German output has been
+  reviewed yet (S12).
 
 - Quantify how much machine assistance helps. Phase 1 ran and the
   translator's verdict was that it does help, which settled whether to
@@ -960,6 +989,6 @@ on a German sample before relying on GaMS3 for that pair.
 - Expand acronyms by footnote rather than inline. `python-docx` has no
   footnote API, so this means writing the XML directly.
 
-- Extend the locale rules to German before that pair is used: it keeps the
-  24-hour clock and writes `5. März 2024`. Six directions are in scope
-  across Slovene, English and German.
+- Locale conversion covers English→German only among the German pairs.
+  Slovene↔German and German→English dates and amounts are left to the
+  model, and Slovene↔German still needs a model chosen.

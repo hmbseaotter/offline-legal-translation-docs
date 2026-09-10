@@ -1,6 +1,6 @@
 # Offline Legal Translation — Document Set
 
-Reference documents for the on-premises translation pipeline (EN↔SL, later DE).
+Reference documents for the on-premises translation pipeline (EN↔SL and EN↔DE).
 Kept here, one level above the encrypted container, so they remain readable when
 the container is closed — which is exactly when you need the instructions for
 opening it.
@@ -73,7 +73,8 @@ to send to the client.
 - Calibrate the vision gate on more than the two pages behind its 3% default
 - Establish how often the model completes a statutory provision from memory
 - Seed the translation memory from the translator's prior work
-- Verify German quality against base Gemma before extending to that pair
+- Have a translator review English→German drafts: EuroLLM's speed is
+  measured, its German output is not yet reviewed
 - Re-measure language detection on legal text; the quoted figures come from
   UDHR, which is thin and general-register (`tools/calibrate_lang.py`)
 - Run Phase 1 on a real subset and record the edit-vs-scratch ratio
