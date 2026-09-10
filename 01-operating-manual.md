@@ -429,10 +429,13 @@ matches their established renderings and register produces fewer
 corrections than an objectively similar draft that does not, so earlier
 translations are probably the single highest-value input available.
 
-They go in the project’s reference/ folder, one language a side, paired
-by path: reference/en/leases/lease-2023.docx beside
-reference/de/leases/lease-2023.pdf. Each side may be Word, PDF with a
-text layer, scanned PDF or plain text, whatever the other side is.
+They go anywhere in the project’s reference/ folder, both files of a
+pair in the same folder and named alike apart from a language suffix:
+lease-2023_English.docx beside lease-2023_German.pdf. The suffix names a
+language, not a role, so the same pair serves English→German and
+German→English work. Each side may be Word, PDF with a text layer,
+scanned PDF or plain text, whatever the other side is; a file without a
+suffix is listed and skipped rather than guessed.
 tr-ref lines each pair up sentence by sentence without a model — by
 length, with the numbers both sides share as anchors — and keeps only
 one-to-one pairs whose numbers agree; a sentence with no number is kept
