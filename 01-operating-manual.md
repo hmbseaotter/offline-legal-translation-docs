@@ -523,9 +523,18 @@ thin evidence; raise it if the second engine keeps confirming the first.
 
 `tr-ocrstat` answers this for a whole corpus rather than one file: it
 reports the unreadable-token rate per PDF, worst first, against the
-thresholds below, and exits non-zero if anything is in the stop band. Use it
-before `tr-run`; use `ocr-check.py` on the individual pages whose numbers
-carry weight.
+thresholds below, and exits non-zero if anything is in the stop band or any
+text layer cannot be measured. Use it before `tr-run`; use `ocr-check.py` on
+the individual pages whose numbers carry weight.
+
+A text layer written by an earlier `tr-inventory --count --with-ocr` cannot
+be measured. That version made it with plain `pdftotext`, so nothing in it
+is marked `OCR_ILLEGIBLE`, and `tr-pdf` reused it for translation. Such
+layers are recognisable — `pdftotext` leaves a form feed after every page,
+which neither `tr-ocrtext` nor the born-digital path writes — so
+`tr-ocrstat` names them rather than reporting 0%, and `tr-pdf` reads the
+file again, keeping the old layer as `<name>.txt.unmarked`.
+`tr-inventory --with-ocr` now has `tr-pdf` make every text layer.
 
 **What counts as too poor to translate.** Not a judgement call, because
 the measurements already exist. tr-ocrtext reports the share of tokens
