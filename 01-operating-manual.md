@@ -596,14 +596,16 @@ thresholds below, and exits non-zero if anything is in the stop band or any
 text layer cannot be measured. Use it before `tr-run`; use `ocr-check.py` on
 the individual pages whose numbers carry weight.
 
-A text layer written by an earlier `tr-inventory --count --with-ocr` cannot
-be measured. That version made it with plain `pdftotext`, so nothing in it
-is marked `OCR_ILLEGIBLE`, and `tr-pdf` reused it for translation. Such
-layers are recognisable — `pdftotext` leaves a form feed after every page,
-which neither `tr-ocrtext` nor the born-digital path writes — so
-`tr-ocrstat` names them rather than reporting 0%, and `tr-pdf` reads the
-file again, keeping the old layer as `<name>.txt.unmarked`.
-`tr-inventory --with-ocr` now has `tr-pdf` make every text layer.
+A text layer written by an earlier `tr-inventory --count --with-ocr`
+cannot be measured. That version made it with plain `pdftotext`, so
+nothing in it is marked `OCR_ILLEGIBLE`, and `tr-pdf` reused it for
+translation. Such layers are recognisable — `pdftotext` leaves a form
+feed after every page, which neither `tr-ocrtext` nor the born-digital
+path writes — so `tr-ocrstat` names them rather than reporting 0% and
+exits non-zero, and `tr-inventory --count --with-ocr` has `tr-pdf` read
+each such file again, however unchanged, keeping the old layer as
+`<name>.txt.unmarked`. `tr-run` then drafts again every deliverable made
+from a layer that changed.
 
 **What counts as too poor to translate.** Not a judgement call, because
 the measurements already exist. tr-ocrtext reports the share of tokens
@@ -717,17 +719,23 @@ at full size until someone opens it and deletes the project directory by
 hand. No script removes client work, so deciding when a matter should
 stop being held is a manual step (container document S4.5).
 
-tr-run is resumable at two levels. It skips files already present in
-translated/, and within a file every segment already in the memory is
-reused rather than regenerated. Interrupting it costs at most one
-segment. Re-running after editing the glossary is cheap for the same
-reason.
+tr-run is resumable at two levels. It skips a file whose deliverable is
+current, and within a file every segment already in the memory is reused
+rather than regenerated. Interrupting it costs at most one segment.
+Re-running after editing the glossary is cheap for the same reason: only
+the segments containing a changed term go back to the model.
 
-A file is re-translated if its source is newer than its output, or if the
-existing output was produced by a different model or a superseded prompt.
-tr-run records which model and prompt version wrote each deliverable in
-work/deliverables.tsv and compares them on the next run, printing a redo
-line that names both.
+A deliverable is drafted again when anything that made it has changed
+since tr-run wrote it. work/deliverables.tsv records, for each, hashes
+of the source file and of a PDF's text layer, the glossary and
+non-translatable patterns, what tr-ref kept, the model, the prompt
+version and the kit's drafting code; tr-run compares them on the next
+run and prints a redo line naming what changed, and tr-status reports
+the same. Memory rows are finished again as they are read, so a fix to
+how drafts are finished reaches rows written before it. A deliverable
+changed after tr-run wrote it, as a translator's corrections in place
+would change it, is never overwritten: tr-run lists it as kept, and
+drafts it again once it is moved aside.
 
 The prompt version is not typed by anyone. It is derived from the prompt
 text each language pair is actually sent, so editing prompts/translate.txt
@@ -741,8 +749,9 @@ ever consulted, so a bump changed nothing and the superseded drafts stood.
 A prompt correction followed by a re-run reported three files skipped in
 three seconds and left the defective drafts in place.
 
-To force a redo, delete the output. To force a redo ignoring the memory,
-change TR_PROMPT_VERSION, which is part of the cache key:
+To force a redo, move the output aside or delete it. To force a redo
+ignoring the memory, change TR_PROMPT_VERSION, which is part of the
+cache key:
 
 > **rm** translated/ovadba.docx && **tr-run** *\# reuse memory*
 >
