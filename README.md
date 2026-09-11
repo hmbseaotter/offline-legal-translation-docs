@@ -76,9 +76,9 @@ to send to the client.
   sentences are reused, and how often `pairs.tsv` needs correcting
 - Have a translator review English→German drafts: EuroLLM's speed is
   measured, its German output is not yet reviewed
-- Build Swiss German drafting: `de-CH` is recognised by `tr-ref` and
-  `tr-terms`, but `tr-run` refuses it until Swiss conventions for amounts,
-  times and ß are built
+- Settle Austrian German conventions before `de-AT` can be drafted, and
+  confirm the Swiss ß→ss rule against the Swiss Federal Chancellery's own
+  spelling guidance
 - Re-measure language detection on legal text; the quoted figures come from
   UDHR, which is thin and general-register (`tools/calibrate_lang.py`)
 - Run Phase 1 on a real subset and record the edit-vs-scratch ratio
