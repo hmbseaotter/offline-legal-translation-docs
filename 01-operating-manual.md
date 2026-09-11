@@ -41,7 +41,10 @@ Confidential work lives in one encrypted container holding many
 projects. Each project is self-contained: its own sources, translations,
 working files, logs, and translation memory. Filenames are preserved
 exactly from source to output, so finding gaps is a plain set difference
-between two directories.
+between two directories. Where two files in one folder would deliver
+under one name — x.docx beside a scanned x.pdf — the one whose format
+changes keeps its extension, so x.pdf delivers as x.pdf.docx; two names
+that differ only in case are refused.
 
 > **~/Claude_Stuff/cli_projects/**
 >
@@ -435,13 +438,17 @@ lease-2023_English.docx beside lease-2023_German.pdf. The suffix names a
 language, not a role, so the same pair serves English→German and
 German→English work. Each side may be Word, PDF with a text layer,
 scanned PDF or plain text, whatever the other side is; a file without a
-suffix is listed and skipped rather than guessed.
-tr-ref lines each pair up sentence by sentence without a model — by
-length, with the numbers both sides share as anchors — and keeps only
-one-to-one pairs whose numbers agree; a sentence with no number is kept
-only where its neighbours lined up one-to-one too. tr-run then gives an
-identical source sentence the translator’s rendering instead of a draft,
-and tr-terms --reference proposes the glossary from those renderings.
+suffix is listed and skipped rather than guessed. tr-ref lines each pair
+up sentence by sentence without a model — by length, with the numbers
+both sides share as anchors — and keeps only one-to-one pairs whose
+numbers agree. Numbers also confirm the alignment: a pair is reused only
+when it carries numbers its neighbours do not, or sits between two pairs
+that do. A sentence nothing confirms is offered instead, as REF_OPTIONS
+[[…]] (unconfirmed), because where a translation omits, adds or swaps a
+sentence, the pairs around the change still look aligned. tr-run then
+gives an identical source sentence the translator’s rendering instead of
+a draft, and tr-terms --reference proposes the glossary from those
+renderings.
 
 German takes a variant after a hyphen: lease-2023_German-CH.pdf is Swiss
 German, \_German-AT Austrian, and \_German or \_German-DE Germany. One
@@ -460,24 +467,30 @@ the first run, because every line there marked yes or option can reach a
 deliverable word for word. Where the references render a sentence more
 than one way, the draft carries the choice instead of a model draft:
 REF_OPTIONS [[first]] | [[second]], for the translator to keep one and
-delete the rest — double square brackets, because Swiss German writes its
-quotation marks «…». The rendering found in the most documents comes
-first, counted once per document; a tie goes to the newest by the date the
-file itself records as last saved, because a copied file's date on disk is
-the day it was copied; and a pinned glossary term found in only one
-rendering puts that one first. The draft carries two; tr-ref --conflicts
-lists every rendering with its count and the date that ordered it. A
-translation read by OCR is offered the same way, tagged (OCR), and never
-reused on its own, since its misreadings would pass straight into the
-output. References stay in their project: memory never crosses matters,
-and a reference is a client’s document.
+delete the rest — double square brackets, because Swiss German writes
+its quotation marks «…». The rendering found in the most documents comes
+first, counted once per document; a tie goes to the newest by the date
+the file itself records as last saved, because a copied file's date on
+disk is the day it was copied; and a pinned glossary term found in only
+one rendering puts that one first. The draft carries two; tr-ref
+--conflicts lists every rendering with its count and the date that
+ordered it. A translation read by OCR is offered the same way, tagged
+(OCR), and never reused on its own, since its misreadings would pass
+straight into the output; so is one rejoined at a line-end hyphen that
+may have been the word’s own, tagged (hyphenation). A reference file
+replaced with a new version is read again, and one that cannot be read
+is listed, loses its sentences, and makes tr-ref exit 1. References stay
+in their project: memory never crosses matters, and a reference is a
+client’s document.
 
-On invented test documents a Word pair kept 12 of 14 sentence pairs and
-a Word-to-PDF pair 4 of 6; the rest were rejected rather than guessed. A
-reused sentence is not checked by tr-lint: it is the translator’s own
-work, and it never enters the translation memory. Harvesting terminology
-from references needs volume — on seventeen pairs tr-terms --reference
-proposes mostly noise.
+On invented documents with each sentence in turn omitted, added or
+swapped — 436 alignments — no wrong sentence was reused. About one
+offered sentence in ten was wrong where a translation departed from its
+original, and none where it did not; tests/test_references.py repeats
+the sweep. A reused sentence is not checked by tr-lint: it is the
+translator’s own work, and it never enters the translation memory.
+Harvesting terminology from references needs volume — on seventeen pairs
+tr-terms --reference proposes mostly noise.
 
 **5. Handling each source type**
 
@@ -748,6 +761,7 @@ alongside the drafts.
 | NUM       | A number in the source is absent from the target, or a number appears that was not in the source. Highest consequence class in legal evidence |
 | LONG      | The target is far longer than the source, or runs to several lines where the source is one: text the model added. On a bare heading that can be a whole invented paragraph. tr-run refuses such replies; this finds any already in a memory |
 | NONTR     | A string marked non-translatable was altered or dropped                                                                                       |
+| DEC       | An English number that could be a section, a clause or a time — 5.10, 3.2, 14.30 — was written as a decimal. Check that it is an amount |
 | INCON     | The same source sentence was translated two different ways. A corpus-level finding no per-document review will surface                        |
 | GLOSS     | An agreed glossary term was not used                                                                                                          |
 | ECHO      | Target identical to source — possible untranslated passthrough                                                                                |
@@ -999,7 +1013,7 @@ reviewed by a translator.
 | Spreadsheet strategy  | Unique-string map          | Collapses the work and guarantees identical cells translate identically                                                           |
 | Verification          | Deterministic linter       | Catches numeric and consistency errors that models cannot self-detect; costs nothing to run                                       |
 | Back-translation      | Dropped, then re-tested    | It does detect added text. But asking the model to audit its own output against the source finds the same additions in less time and needs no comparison step |
-| Dates, amounts, times | Converted, not verbatim    | The translator's rule. English takes March 5, 2024 and a decimal point; Slovene takes 5. marec 2024 — ordinal period, lowercase month, spaced — and a decimal comma. Whole-segment values are converted in code, without a model call |
+| Dates, amounts, times | Converted, not verbatim    | The translator's rule. English takes March 5, 2024 and a decimal point; Slovene takes 5. marec 2024 — ordinal period, lowercase month, spaced — and a decimal comma. Whole-segment values are converted in code, without a model call. From English, a number that may be a reference or a time — Section 5.10, at 14.30 — is left as it stands |
 | Institution names     | Translated; source bracketed on first mention per document | A court's name is not an identifier, so it is translated — listing them beside case numbers had made two models read that rule two ways, one leaving Slovene in the output. The source form is kept in parentheses on the first mention in each document and dropped thereafter, because a reader may open any file first and each has to stand on its own |
 | Completed provisions  | Flag the context           | The model finishes famous provisions from memory. No prompt stopped it and no deterministic check sees it, so segments citing a statute are flagged for word-by-word review |
 | Machine-assisted drafts | Permitted, no disclosure | The translator: what counts is the final product, not how it was produced. Most of the trade already edits machine output. No obligation to tell the court |
@@ -1013,7 +1027,7 @@ reviewed by a translator.
 | Certification         | Batch form, stamp on paper | No per-document certification block. `.docx` primary, `.pdf` acceptable, `.xlsx` for tables since text formats handle them poorly |
 | Language pairs        | sl↔en and en↔de; sl↔de not yet | Every one of the three can be source or target. Slovene↔German has no model chosen and refuses to translate: the model researched for it is not installed, and pivoting through English doubles the error |
 | Prompt version        | Derived from the prompt text | A hand-bumped string invalidated every pair at once and could be forgotten. A hash of the text each pair is actually sent changes exactly when that text does. The two v6 texts keep the name v6, so existing memory stays valid |
-| Reference translations | Reused when identical and agreed; otherwise offered | An identical source sentence takes the translator's own rendering with no model call. Only one-to-one pairs whose numbers agree are kept. Where references disagree, the draft carries REF_OPTIONS with the two leading renderings — most documents first, then the newest by the file's own saved date, a pinned glossary term ahead of both — because choosing between human renderings is the translator's decision. OCR-read translations, and another variant's where the project's own has none, are offered tagged and never reused on their own. They stay in their project, because memory never crosses matters |
+| Reference translations | Reused when identical and agreed; otherwise offered | An identical source sentence takes the translator's own rendering with no model call. Only one-to-one pairs whose numbers agree are kept, and only those that numbers confirm are reused; a sentence nothing confirms is offered tagged (unconfirmed). Where references disagree, the draft carries REF_OPTIONS with the two leading renderings — most documents first, then the newest by the file's own saved date, a pinned glossary term ahead of both — because choosing between human renderings is the translator's decision. OCR-read translations, and another variant's where the project's own has none, are offered tagged and never reused on their own. They stay in their project, because memory never crosses matters |
 | German variants       | A target setting; plain de is Germany | TR_TGT names de-DE, de-AT or de-CH, and de-DE is read as de, so a Germany project keeps its memory however the target is spelled. Swiss drafts follow the Swiss Federal Chancellery: a number counts as money, with a decimal point, only beside a currency, because a converter cannot see the column it stands in; and ß becomes ss except in a word the source has too, so names and addresses stay as written. Austrian drafts are refused until their conventions are settled, rather than written by Germany's. A reference translation is reused only in its own variant, because renderings in two variants differ as a matter of course |
 | Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. One part of that has since been closed rather than accepted: OCR renders every page of a scan to a PNG, and on an all-scanned corpus that put the whole evidence bundle through /tmp — tmpfs, so RAM-backed and swappable to the plain 8 GB swapfile, and left behind entirely when a run is killed before its cleanup. Those renders now go to `<project>/work/tmp` inside the container (`trlib.case_tmpdir`). Encrypted swap is the cheapest of the remaining mitigations if the rest is revisited |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
