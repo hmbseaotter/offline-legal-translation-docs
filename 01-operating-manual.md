@@ -443,6 +443,15 @@ only where its neighbours lined up one-to-one too. tr-run then gives an
 identical source sentence the translator’s rendering instead of a draft,
 and tr-terms --reference proposes the glossary from those renderings.
 
+German takes a variant after a hyphen: lease-2023_German-CH.pdf is Swiss
+German, \_German-AT Austrian, and \_German or \_German-DE Germany. One
+English original beside a Germany and a Swiss translation makes two
+pairs. A German translation is reused only in a project whose TR_TGT is
+its variant; one in another variant is lined up and listed in pairs.tsv
+as not reused, and tr-terms --reference leaves it out, since a Germany
+translation would propose Straße to a Swiss glossary. A German→English
+project reuses a pair whatever German its source is written in.
+
 Everything kept is listed in work/reference/pairs.tsv, to be read before
 the first run, because every line there can reach a deliverable word for
 word. Two kinds are never reused: a sentence the references translate
@@ -887,29 +896,29 @@ not held at full charge continuously:
 
 **12. Environment variables**
 <!-- GENERATED:env -->
-| Variable            | Default                                  | Purpose                                                                                                                                                        |
-|---------------------|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| TR_PROJECTS         | ~/translation-work/confidential-projects | Container root holding all projects                                                                                                                            |
-| TR_ROOT             | (active project)                         | Override to target one project for a single command                                                                                                            |
-| TR_MODEL            | (by language pair)                       | Overrides the model chosen for the pair: gams3:q8 for sl↔en, eurollm9b-2512:q8 for en↔de, none for sl↔de. Set it in a project's project.conf, not in ~/.bashrc |
-| TR_SRC / TR_TGT     | sl / en                                  | Per-project, in project.conf. Any two of sl, en, de                                                                                                            |
-| TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Set if the client requires it                                                                                                    |
-| TR_NUM_CTX          | 8192                                     | Context window. Lower if memory is tight                                                                                                                       |
-| TR_PROMPT_VERSION   | (from the prompt text)                   | Override only. Derived per pair from the prompt text actually sent, so editing the prompt changes it; sl↔en is v6                                              |
-| TR_OCR_LANGS        | slv+eng                                  | Tesseract languages of the source documents: eng for an English drop, deu for German                                                                           |
-| TR_OLLAMA           | http://127.0.0.1:11434                   | Ollama endpoint                                                                                                                                                |
-| TR_DICTS            | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with                                                                                  |
-| TR_OCR_SAMPLE_LANGS | slv+hrv+eng                              | Tesseract languages for the detection sampling pass on scanned PDFs                                                                                            |
-| TR_VENV             | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere                                                                           |
-| TR_NO_REEXEC        | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail                                                                                |
-| CASE_IMG            | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status                                                                                             |
-| CASE_MAP            | casedata                                 | Device-mapper name while the container is unlocked                                                                                                             |
-| TR_VISION_MODEL     | deepseek-ocr:3b                          | Second OCR engine used by ocr-check.py. qwen3.6 is the fallback                                                                                                |
-| TR_VISION_PROMPT    | Extract the text in the image.           | Prompt for that model. It transcribes; it does not follow instructions                                                                                         |
-| TR_OCR_MIN_CONF     | 40                                       | Tesseract confidence floor in tr-ocrtext. Below it, a word is marked unreadable                                                                                |
-| TR_ILLEGIBLE_MARK   | OCR_ILLEGIBLE                            | What tr-ocrtext writes in place of a word it could not read                                                                                                    |
-| CLAUDE_DESKTOP_BIN  | /usr/bin/claude-desktop                  | The real binary case-guard-desktop launches once it has checked the mount                                                                                      |
-| CASE_MNT            | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks                                                                                                  |
+| Variable            | Default                                  | Purpose                                                                                                                                                                                                                               |
+|---------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| TR_PROJECTS         | ~/translation-work/confidential-projects | Container root holding all projects                                                                                                                                                                                                   |
+| TR_ROOT             | (active project)                         | Override to target one project for a single command                                                                                                                                                                                   |
+| TR_MODEL            | (by language pair)                       | Overrides the model chosen for the pair: gams3:q8 for sl↔en, eurollm9b-2512:q8 for en↔de, none for sl↔de. Set it in a project's project.conf, not in ~/.bashrc                                                                        |
+| TR_SRC / TR_TGT     | sl / en                                  | Per-project, in project.conf. Any two of sl, en, de. TR_TGT may name a German variant: de-DE (the same as de), de-AT or de-CH. tr-ref and tr-terms read the last two; drafting into them is refused until their conventions are built |
+| TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Set if the client requires it                                                                                                                                                                           |
+| TR_NUM_CTX          | 8192                                     | Context window. Lower if memory is tight                                                                                                                                                                                              |
+| TR_PROMPT_VERSION   | (from the prompt text)                   | Override only. Derived per pair from the prompt text actually sent, so editing the prompt changes it; sl↔en is v6                                                                                                                     |
+| TR_OCR_LANGS        | slv+eng                                  | Tesseract languages of the source documents: eng for an English drop, deu for German                                                                                                                                                  |
+| TR_OLLAMA           | http://127.0.0.1:11434                   | Ollama endpoint                                                                                                                                                                                                                       |
+| TR_DICTS            | /usr/share/hunspell                      | Where tr-inventory looks for the hunspell word lists it detects language with                                                                                                                                                         |
+| TR_OCR_SAMPLE_LANGS | slv+hrv+eng                              | Tesseract languages for the detection sampling pass on scanned PDFs                                                                                                                                                                   |
+| TR_VENV             | ~/.translate-venv                        | Python environment the scripts re-exec into. Set before tr-setup to put it elsewhere                                                                                                                                                  |
+| TR_NO_REEXEC        | (unset)                                  | Set to 1 to stay on the system interpreter. Diagnostics only; imports will fail                                                                                                                                                       |
+| CASE_IMG            | ~/.case/confidential.luks                | The LUKS container file. Read by case-init, case-open, case-status                                                                                                                                                                    |
+| CASE_MAP            | casedata                                 | Device-mapper name while the container is unlocked                                                                                                                                                                                    |
+| TR_VISION_MODEL     | deepseek-ocr:3b                          | Second OCR engine used by ocr-check.py. qwen3.6 is the fallback                                                                                                                                                                       |
+| TR_VISION_PROMPT    | Extract the text in the image.           | Prompt for that model. It transcribes; it does not follow instructions                                                                                                                                                                |
+| TR_OCR_MIN_CONF     | 40                                       | Tesseract confidence floor in tr-ocrtext. Below it, a word is marked unreadable                                                                                                                                                       |
+| TR_ILLEGIBLE_MARK   | OCR_ILLEGIBLE                            | What tr-ocrtext writes in place of a word it could not read                                                                                                                                                                           |
+| CLAUDE_DESKTOP_BIN  | /usr/bin/claude-desktop                  | The real binary case-guard-desktop launches once it has checked the mount                                                                                                                                                             |
+| CASE_MNT            | ~/translation-work/confidential-projects | Where the container mounts. Also what the claude guard checks                                                                                                                                                                         |
 <!-- /GENERATED:env -->
 
 For an English→German matter, set the pair once in that project’s
@@ -933,6 +942,14 @@ English↔German, because German is absent from every stage of GaMS3's
 training. tr-run names the model in its banner and refuses to start when
 it is not installed. Slovene↔German has no model chosen and refuses to
 translate.
+
+TR_TGT=de is German as written in Germany, and de-DE means the same, so
+a project may use either without touching its translation memory. de-AT
+and de-CH are recognised: tr-ref files reference translations in them
+and tr-terms --reference reads them. tr-run and the workers refuse to
+draft into them, because the prompt and the conversion of dates, amounts
+and times follow Germany, and a Swiss draft made by those rules would
+read as finished. TR_SRC takes no variant; a Swiss German source is de.
 
 Measured on this machine with invented English legal text: about 10
 seconds a segment over 42 requests, none failed, against 48 for GaMS3.
@@ -977,6 +994,7 @@ reviewed by a translator.
 | Language pairs        | sl↔en and en↔de; sl↔de not yet | Every one of the three can be source or target. Slovene↔German has no model chosen and refuses to translate: the model researched for it is not installed, and pivoting through English doubles the error |
 | Prompt version        | Derived from the prompt text | A hand-bumped string invalidated every pair at once and could be forgotten. A hash of the text each pair is actually sent changes exactly when that text does. The two v6 texts keep the name v6, so existing memory stays valid |
 | Reference translations | Reused when identical and agreed | An identical source sentence takes the translator's own rendering with no model call. Only one-to-one pairs whose numbers agree are kept; disagreeing references and OCR-read translations are never reused verbatim. They stay in their project, because memory never crosses matters |
+| German variants       | A target setting; plain de is Germany | TR_TGT names de-DE, de-AT or de-CH, and de-DE is read as de, so a Germany project keeps its memory however the target is spelled. Swiss and Austrian drafts are refused until their conventions are built, rather than written by Germany's. A reference translation is reused only in its own variant, because renderings in two variants differ as a matter of course |
 | Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. One part of that has since been closed rather than accepted: OCR renders every page of a scan to a PNG, and on an all-scanned corpus that put the whole evidence bundle through /tmp — tmpfs, so RAM-backed and swappable to the plain 8 GB swapfile, and left behind entirely when a run is killed before its cleanup. Those renders now go to `<project>/work/tmp` inside the container (`trlib.case_tmpdir`). Encrypted swap is the cheapest of the remaining mitigations if the rest is revisited |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
 | Glossary layering     | Shared base + overlay      | Terminology is reusable; case specifics are not. Layering gets the benefit without the leak                                       |
@@ -1028,3 +1046,8 @@ reviewed by a translator.
 - Locale conversion covers English→German only among the German pairs.
   Slovene↔German and German→English dates and amounts are left to the
   model, and Slovene↔German still needs a model chosen.
+
+- Build Swiss German drafting (S12). de-CH is recognised but refused:
+  Swiss amounts, times and ß differ from Germany's in ways a deliverable
+  shows, and the prompt, the date and amount conversion and the number
+  checks all follow Germany. de-AT has no conventions settled yet.
