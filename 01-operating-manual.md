@@ -99,6 +99,13 @@ project.conf and every tool follows:
 
 > TR_SUFFIX=\_translated *\# in \<project\>/project.conf*
 
+TR_SUFFIX=auto labels each deliverable with the language it is drafted
+into, spelled as tr-ref reads it: lease.docx delivers as
+lease_German.docx, or lease_German-CH.docx in a Swiss project. A
+translation filed beside its source then cannot overwrite it, and is
+already half of a reference pair. A suffix that names another language
+than TR_TGT is refused.
+
 **2.1 The \$KIT shorthand**
 
 The kit path is long, so this manual uses \$KIT throughout. Define it
@@ -451,6 +458,20 @@ omits, adds or swaps a sentence, the pairs around the change still look
 aligned. tr-run then gives an identical source sentence the translator’s
 rendering instead of a draft, and tr-terms --reference proposes the
 glossary from those renderings.
+
+A past project's originals and translations, kept in two folders —
+\<client\>/in/356 and \<client\>/out/356, say, each translation labelled
+before its extension — need not be copied by hand. tr-refimport
+\<originals\> \<translations\> --from en --to de reads both folders with
+their subfolders and lists what it would copy side by side into
+reference/, under the originals' folder name — the originals labelled
+\_English before every extension, so lease.pdf.docx becomes
+lease_English.pdf.docx — and copies them when given --apply. A
+translation with no label, a label naming another language, a name two
+files would share and a file already there are listed and not copied,
+and the archive is left as it was. Copy only reviewed translations:
+tr-ref reuses their sentences word for word, and tr-lint never checks
+them.
 
 German takes a variant after a hyphen: lease-2023_German-CH.pdf is Swiss
 German, \_German-AT Austrian, and \_German or \_German-DE Germany. One
@@ -934,7 +955,7 @@ not held at full charge continuously:
 | TR_ROOT             | (active project)                         | Override to target one project for a single command                                                                                                                                                                                                                                                                                                         |
 | TR_MODEL            | (by language pair)                       | Overrides the model chosen for the pair: gams3:q8 for sl↔en, eurollm9b-2512:q8 for en↔de, none for sl↔de. Set it in a project's project.conf, not in ~/.bashrc                                                                                                                                                                                              |
 | TR_SRC / TR_TGT     | sl / en                                  | Per-project, in project.conf. TR_SRC is sl or en: a German source is refused until language detection knows German. TR_TGT is sl, en or de, and may name a German variant: de-DE (the same as de); de-CH, drafted by the Swiss Federal Chancellery's rules; or de-AT, which tr-ref and tr-terms read but drafting refuses until its conventions are settled |
-| TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Set if the client requires it                                                                                                                                                                                                                                                                                                 |
+| TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Added to each deliverable's name before its extension. auto: the target language's label, such as _German or _German-CH, which tr-ref reads, so a translation is also half of a reference pair. A label naming another language than TR_TGT is refused                                                                        |
 | TR_NUM_CTX          | 8192                                     | Context window. Lower if memory is tight                                                                                                                                                                                                                                                                                                                    |
 | TR_BATCH_ITEMS      | 20                                       | Most short segments sent to the model in one request                                                                                                                                                                                                                                                                                                        |
 | TR_BATCH_CHARS      | 1500                                     | Most characters in one batched request                                                                                                                                                                                                                                                                                                                      |

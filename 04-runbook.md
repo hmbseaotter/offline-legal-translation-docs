@@ -81,7 +81,17 @@ only in case are refused; rename one.
 **Earlier translations, if the client has them.** Put both files of each
 pair in the same folder anywhere under `reference/`, named alike apart from
 a language suffix — `lease-2023_English.docx` beside
-`lease-2023_German.pdf` — then:
+`lease-2023_German.pdf`. A past project's originals and translations, kept
+in two folders — `<client>/in/356` and `<client>/out/356`, say, each
+translation labelled `_German` before its extension — are copied in that way
+by `tr-refimport`, given the two folders. It lists what it would copy, and
+what it would not and why, until it is given `--apply`, and it leaves the
+archive as it was. Copy only reviewed translations:
+
+    tr-refimport <client>/in/356 <client>/out/356 --from en --to de
+    tr-refimport <client>/in/356 <client>/out/356 --from en --to de --apply
+
+Then:
 
     tr-ref
 
@@ -445,6 +455,19 @@ line up reference translations so their sentences are reused.
 |---|---|
 | `--rebuild` | align every pair again, not only the ones that changed |
 | `--conflicts` | print every sentence written as REF_OPTIONS, each rendering with its document count and the date that ordered it |
+
+### `tr-refimport`
+
+copy a past project's originals and translations into reference/.
+
+    Usage:  tr-refimport <originals> <translations> --from en --to de
+
+| Flag | Meaning |
+|---|---|
+| `--from` | language of the originals: en or sl |
+| `--to` | language of the translations: de, de-CH, en or sl |
+| `--into` | where the copies go, inside the container; default the project's reference/, under the originals' folder name |
+| `--apply` | copy; without it, only list what would be copied |
 
 ### `tr-run`
 
