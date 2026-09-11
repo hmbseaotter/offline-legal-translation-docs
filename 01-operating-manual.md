@@ -407,13 +407,18 @@ Slovene month). The all-numeric 5.3.2024 is technically correct Slovene but
 invites the reader to wonder whether it means 5 March or 3 May, which is a
 poor property for evidence.
 
-The distinction has a practical edge. Inside a sentence the model does the
-conversion. A segment that is *only* a date or an amount never reaches the
-model at all, because the patterns above exclude it from translation — so
-a Datum column in a spreadsheet stayed in Slovene while the same date in
-prose came out in English, and the deliverable contradicted itself column
-by column. Those whole-segment values are now converted in code: exact,
-consistent, and without the 48 seconds a model call would cost.
+The distinction has a practical edge. Inside a sentence the model does
+the conversion. A segment that is *only* a date or an amount never
+reaches the model at all, because the patterns above exclude it from
+translation — so a Datum column in a spreadsheet stayed in Slovene while
+the same date in prose came out in English, and the deliverable
+contradicted itself column by column. Those whole-segment values are now
+converted in code: exact, consistent, and without the 48 seconds a model
+call would cost. The same holds for a value with a currency on either
+side, a sign, accounting brackets or a percent — \$1,000, -1,250.00,
+(1,250.00), 12.5% — for a range such as 12:00–13:00, and for a date or a
+time spelled with letters, such as March 5, 2024 or 2:30 p.m., which
+used to go to the model.
 
 > **nano** \$P/\_shared/glossary/nontranslatable.txt
 >
@@ -767,7 +772,7 @@ alongside the drafts.
 | **Check** | **Meaning**                                                                                                                                   |
 |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | FAIL      | A deliverable holds [TRANSLATION FAILED]: a segment the model could not translate. tr-run has counted its file as failed and drafts it again on the next run                                                                     |
-| NUM       | A number in the source is absent from the target, or a number appears that was not in the source. Highest consequence class in legal evidence |
+| NUM       | A number in the source is absent from the target, or a number appears that was not in the source, compared as values with each side read in its own notation. Highest consequence class in legal evidence |
 | LONG      | The target is far longer than the source, or runs to several lines where the source is one: text the model added. On a bare heading that can be a whole invented paragraph. tr-run refuses such replies; this finds any already in a memory |
 | NONTR     | A string marked non-translatable was altered or dropped                                                                                       |
 | DEC       | An English number that could be a section, a clause or a time — 5.10, 3.2, 14.30 — was written as a decimal. Check that it is an amount |
@@ -987,14 +992,15 @@ decimal point only beside a currency, the code first (CHF 1250.50, EUR
 12 450.00), and whole francs as Fr. 20.–; times as 14.30 and 9.05; dates
 as in Germany; and ss for ß, except in a word the source has too, such
 as a name or an address. The prompt carries these rules, and the kit
-applies them itself to values standing alone, to amounts the model left
-in English form, and to spelling. A number counts as money only beside a
-currency, because a converter cannot see the column it stands in. de-AT
-is recognised — tr-ref files references in it and tr-terms --reference
-reads them — but drafting into it is refused until its conventions are
-settled. TR_SRC is sl or en: a German source is refused for now, because
-language detection has no German and German→English has no rules of its
-own.
+applies them itself to values standing alone, to amounts and times the
+model left in English form or in Germany's, to whole francs however they
+are written, and to spelling. A number counts as money only beside a
+currency, or beside the other end of a range that has one, because a
+converter cannot see the column it stands in. de-AT is recognised —
+tr-ref files references in it and tr-terms --reference reads them — but
+drafting into it is refused until its conventions are settled. TR_SRC is
+sl or en: a German source is refused for now, because language detection
+has no German and German→English has no rules of its own.
 
 Measured on this machine with invented English legal text: about 10
 seconds a segment over 42 requests, none failed, against 48 for GaMS3.
@@ -1004,14 +1010,17 @@ cautions from the same runs. A bare label or heading is where the model
 invents: "Case number" came back as a fictitious German court reference,
 and the heading STATEMENT as a whole invented declaration. tr-run gives
 such a reply one firmer retry — a reply far longer than its source, or
-one carrying a number the source does not have. A reply still far too
-long after it is written as [TRANSLATION FAILED], and its file counts as
-failed: tr-run exits 1, records nothing for it and drafts it again on
-the next run, and tr-lint lists it; one still carrying an extra number
-is kept and reported by tr-lint as NUM, because "dva tedna" rendered as
-"2 weeks" adds a digit without adding anything false. Over eight
-number-prone labels, three replies invented something and none did after
-the retry. And no German draft has yet been reviewed by a translator.
+one carrying a number the source does not have. Numbers are compared as
+values, each side read in its own notation, so a date or an amount the
+model converted correctly earns no retry, and in a batch only the line
+that added something is retried. A reply still far too long after it is
+written as [TRANSLATION FAILED], and its file counts as failed: tr-run
+exits 1, records nothing for it and drafts it again on the next run, and
+tr-lint lists it; one still carrying an extra number is kept and
+reported by tr-lint as NUM, because "dva tedna" rendered as "2 weeks"
+adds a digit without adding anything false. Over eight number-prone
+labels, three replies invented something and none did after the retry.
+And no German draft has yet been reviewed by a translator.
 
 **13. Decisions and why**
 
