@@ -390,22 +390,19 @@ court formats are supplied. Every one of these the model would otherwise
 "helpfully" translate is a guaranteed edit at a known location, so
 catching them in code is free quality.
 
-Dates, amounts and times are **not** in that class. They are converted,
+Dates, amounts and times are NOT in that class. They are converted,
 because that is what a translation is. Into English, 5. 3. 2024 becomes
-March 5, 2024; 12.450,00 becomes 12,450.00; a 24-hour time becomes
-2:30 p.m. Into Slovene it runs the other way: 5. marec 2024 — the day
-carries a period because it is an ordinal, so bare "5" would read as the
+March 5, 2024; 12.450,00 becomes 12,450.00; a 24-hour time becomes 2:30
+p.m. Into Slovene it runs the other way: 5. marec 2024 — the day carries
+a period because it is an ordinal, so bare "5" would read as the
 cardinal number rather than the fifth day; the month name is lowercase,
 which Slovene requires; and the three parts are spaced. Amounts take
 12.450,00 and times stay on the 24-hour clock. The value never changes;
-only its spelling does.
-
-Two forms are wrong in either language and worth naming, because both were
-in this kit before the translator corrected them: "5 March 2024" (no comma,
-English does not write it that way here) and "5. Marec 2024" (a capitalised
-Slovene month). The all-numeric 5.3.2024 is technically correct Slovene but
-invites the reader to wonder whether it means 5 March or 3 May, which is a
-poor property for evidence.
+only its spelling does. Two forms are wrong in either language and worth
+naming, because both were in this kit before the translator corrected
+them: "5 March 2024" and "5. Marec 2024". The all-numeric 5.3.2024 is
+technically correct Slovene but invites the reader to wonder whether it
+means 5 March or 3 May, which is a poor property for evidence.
 
 The distinction has a practical edge. Inside a sentence the model does
 the conversion. A segment that is *only* a date or an amount never
@@ -616,20 +613,17 @@ from a layer that changed.
 the measurements already exist. tr-ocrtext reports the share of tokens
 Tesseract scored below its confidence floor; ocr-check.py reports the
 share of doubtful words and the number disagreements between the two
-engines.
+engines. Unreadable tokens: under 5% proceed, 5–20% inspect, 20% or more
+stop. Doubtful words: under 3% proceed, 3–10% run the cross-check, over
+10% stop. Number disagreements: any at all, and a person reads that
+page.
 
-| Measure | Proceed | Inspect | Stop |
-|---|---|---|---|
-| Unreadable tokens (tr-ocrtext) | under 5% | 5–20% | 20% or more |
-| Doubtful words (ocr-check.py) | under 3% | 3–10% | over 10% |
-| Number disagreements (ocr-check.py) | none | **any at all — a person reads that page** | — |
-
-The third row is deliberately not a rate. A page can be 99% clean and
-still carry one wrong digit in an amount, and nothing downstream can
-catch it, so a disagreement is not a reason to stop the project — it is a
-page that gets read against the original. The first two thresholds come
-from eight pages of two real documents and are starting points with a
-stated basis, not laws. The Phase 1 files measured 1% and 3%.
+The third criterion is deliberately not a rate. A page can be 99% clean
+and still carry one wrong digit in an amount, and nothing downstream can
+catch it, so a disagreement is not a reason to stop the project — it is
+a page that gets read against the original. The first two thresholds
+come from eight pages of two real documents and are starting points with
+a stated basis, not laws. The Phase 1 files measured 1% and 3%.
 
 The earlier figure of 6.7 minutes a page, and the caveat that only a
 clean render had been tested, both belonged to qwen3.6 and are
@@ -740,21 +734,19 @@ the same. Memory rows are finished again as they are read, so a fix to
 how drafts are finished reaches rows written before it. A deliverable
 changed after tr-run wrote it, as a translator's corrections in place
 would change it, is never overwritten: tr-run lists it as kept, and
-drafts it again once it is moved aside.
-
-The prompt version is not typed by anyone. It is derived from the prompt
-text each language pair is actually sent, so editing prompts/translate.txt
-gives the pairs whose text changed a new version, and leaves the others
-alone. The Slovene↔English text in use since v6 keeps that name.
-
-That second condition was missing until it mattered. The prompt version is
-part of the memory's key, so a new one invalidates every cached segment -
-but tr-run skipped the whole file on mtime alone, before the memory was
-ever consulted, so a bump changed nothing and the superseded drafts stood.
-A prompt correction followed by a re-run reported three files skipped in
-three seconds and left the defective drafts in place.
-
-To force a redo, move the output aside or delete it. To force a redo
+drafts it again once it is moved aside. The prompt version is not typed
+by anyone: it is derived from the prompt text each language pair is
+actually sent, so editing prompts/translate.txt gives the pairs whose
+text changed a new version and leaves the others alone. The
+Slovene↔English text in use since v6 keeps that name. The English→German
+version changed once, on 2026-09-10 at kit commit aeaa8e3, from
+p-b5121a0c86bf to p-86640e2a7d20, so memory written under the first is
+not reused. That condition was missing until it mattered: the prompt
+version is part of the memory's key, but tr-run skipped the whole file
+on mtime alone, before the memory was consulted, so a bump changed
+nothing. A prompt correction followed by a re-run reported three files
+skipped in three seconds and left the defective drafts in place. To
+force a redo, move the output aside or delete it. To force a redo
 ignoring the memory, change TR_PROMPT_VERSION, which is part of the
 cache key:
 
@@ -944,6 +936,9 @@ not held at full charge continuously:
 | TR_SRC / TR_TGT     | sl / en                                  | Per-project, in project.conf. TR_SRC is sl or en: a German source is refused until language detection knows German. TR_TGT is sl, en or de, and may name a German variant: de-DE (the same as de); de-CH, drafted by the Swiss Federal Chancellery's rules; or de-AT, which tr-ref and tr-terms read but drafting refuses until its conventions are settled |
 | TR_SUFFIX           | (empty)                                  | Per-project, in project.conf. Set if the client requires it                                                                                                                                                                                                                                                                                                 |
 | TR_NUM_CTX          | 8192                                     | Context window. Lower if memory is tight                                                                                                                                                                                                                                                                                                                    |
+| TR_BATCH_ITEMS      | 20                                       | Most short segments sent to the model in one request                                                                                                                                                                                                                                                                                                        |
+| TR_BATCH_CHARS      | 1500                                     | Most characters in one batched request                                                                                                                                                                                                                                                                                                                      |
+| TR_BATCH_ITEM_CHARS | 200                                      | Longest segment that is batched; a longer one goes on its own                                                                                                                                                                                                                                                                                               |
 | TR_PROMPT_VERSION   | (from the prompt text)                   | Override only. Derived per pair from the prompt text actually sent, so editing the prompt changes it; sl↔en is v6                                                                                                                                                                                                                                           |
 | TR_OCR_LANGS        | slv+eng                                  | Tesseract languages of the source documents: eng for an English drop, deu for German                                                                                                                                                                                                                                                                        |
 | TR_OLLAMA           | http://127.0.0.1:11434                   | Ollama endpoint                                                                                                                                                                                                                                                                                                                                             |
@@ -1092,7 +1087,7 @@ And no German draft has yet been reviewed by a translator.
   by register.
 
 - Build the visible marker for quoted provisions with no established
-  translation (§8.1). The trigger needs settling: on a first run the memory
+  translation (S8.1). The trigger needs settling: on a first run the memory
   is empty, so a naive rule marks every citation.
 
 - Expand acronyms by footnote rather than inline. `python-docx` has no

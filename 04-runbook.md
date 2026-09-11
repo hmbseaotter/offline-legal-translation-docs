@@ -88,7 +88,8 @@ a language suffix — `lease-2023_English.docx` beside
 It lines the pairs up sentence by sentence, without a model, and `tr-run`
 then takes the reference translation for any source sentence identical to
 one it kept. Open `work/reference/pairs.tsv` before translating: every line
-in it can reach a deliverable word for word. Numbers confirm the alignment,
+marked `yes` or `option` reaches a deliverable in the words it shows, and no
+other line does. Numbers confirm the alignment,
 and a sentence nothing confirms — no number of its own or either side — is
 offered rather than reused, as `REF_OPTIONS [[…]] (unconfirmed)`: a
 translation that omits, adds or swaps a sentence leaves the pairs around it
@@ -387,7 +388,7 @@ inventory every file in source/ and detect its language.
 | `--limit` | stop after N files, in walk order. For trying the run on a large drop before committing to it |
 | `--count` | read every file in full and count words and segments, for estimating the volume of work |
 | `--accept-revisions` | take the detector's verdict wherever it disagrees with the recorded language, without asking |
-| `--with-ocr` | with --count, run the real OCR pass on scanned PDFs instead of listing them as needing it. Slow, and cached so tr-pdf does not repeat it |
+| `--with-ocr` | with --count, make the text layer tr-pdf translates for every PDF -- OCR for a scan -- instead of listing scans as needing it. Slow, and cached so tr-pdf does not repeat it |
 
 ### `tr-lint`
 

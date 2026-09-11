@@ -186,54 +186,22 @@ not one language, so triage runs before translation (S4.1).
 
 **4.1 Testing without waiting on inference**
 
-Iterating on the pipeline against a 13 GB model at four tokens per
-second is slow and unnecessary. A mock server that mimics the Ollama API
-makes the whole pipeline testable in seconds, and lets you inject
-deliberate faults to confirm the linter catches them. Run the fixture
-corpus through it after any change to segmentation, the non-translatable
-patterns or the workers: the whole set completes in seconds and tr-lint
-reports the injected NUM fault. It does not tell you anything about the
-model — that is task 5.
+Iterating on the pipeline against a local model is slow and unnecessary.
+The kit ships a stand-in for the Ollama API, tests/mock_ollama.py, and a
+regression suite that uses it: tests/run builds invented documents in a
+throwaway root, answers the model's requests by rule — including
+/api/tags, which tr-run checks before it starts — and exercises the
+workers, tr-lint, tr-ref and the staleness checks in under a minute. Run
+it before every commit; a fix arrives with a test that fails without it.
+It tells you nothing about the model — that is task 5.
 
-> **cat** \> **/tmp/mock_ollama.py** \<\<'EOF'
+> **cd** "\$KIT"
 >
-> **import** json, http.server
+> **tests/run** *\# every test, about a minute*
 >
-> **class** H(http.server.BaseHTTPRequestHandler):
+> **tests/run** test_numbers *\# one module*
 >
-> **def** log_message(self,\*a): pass
->
-> **def** do_POST(self):
->
-> n=int(self.headers\["Content-Length"\])
->
-> d=json.loads(self.rfile.read(n)); p=d\["prompt"\]
->
-> **if** "211" in p: out=p.replace("211","") *\# fault: lost number*
->
-> **else:** out="EN\["+p+"\]"
->
-> b=json.dumps({"response":out}).encode()
->
-> **self.send_response(200)**
->
-> **self.send_header("Content-Type","application/json")**
->
-> **self.send_header("Content-Length",str(len(b)))**
->
-> **self.end_headers();** self.wfile.write(b)
->
-> **http.server.ThreadingHTTPServer(("127.0.0.1",11499),H).serve_forever()**
->
-> **EOF**
->
-> **(setsid** python3 /tmp/mock_ollama.py \>**/tmp/mock.log** 2\>&1
-> &**)**
->
-> **export** TR_OLLAMA=http://127.0.0.1:11499 TR_MODEL=mock
->
-> **tr-run** && **tr-lint** *\# lint should report the injected NUM
-> fault*
+> **tests/run** -k Retry *\# the tests whose names match*
 
 **5. What must not be done in a session**
 
