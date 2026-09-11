@@ -447,18 +447,28 @@ German takes a variant after a hyphen: lease-2023_German-CH.pdf is Swiss
 German, \_German-AT Austrian, and \_German or \_German-DE Germany. One
 English original beside a Germany and a Swiss translation makes two
 pairs. A German translation is reused only in a project whose TR_TGT is
-its variant; one in another variant is lined up and listed in pairs.tsv
-as not reused, and tr-terms --reference leaves it out, since a Germany
-translation would propose Straße to a Swiss glossary. A German→English
-project reuses a pair whatever German its source is written in.
+its variant. One in another variant is never reused: where the project's
+own variant has no reference for a sentence it is offered as REF_OPTIONS,
+tagged with its variant, and tr-terms --reference leaves it out, since a
+Germany translation would propose Straße to a Swiss glossary. A
+German→English project reuses a pair whatever German its source is
+written in.
 
 Everything kept is listed in work/reference/pairs.tsv, to be read before
-the first run, because every line there can reach a deliverable word for
-word. Two kinds are never reused: a sentence the references translate
-differently (tr-ref --conflicts), and a translation read by OCR, whose
-misreadings would pass straight into the output — those count for
-terminology only. References stay in their project: memory never crosses
-matters, and a reference is a client’s document.
+the first run, because every line there marked yes or option can reach a
+deliverable word for word. Where the references render a sentence more
+than one way, the draft carries the choice instead of a model draft:
+REF_OPTIONS «first» | «second», for the translator to keep one and delete
+the rest. The rendering found in the most documents comes first, counted
+once per document; a tie goes to the newest by the date the file itself
+records as last saved, because a copied file's date on disk is the day it
+was copied; and a pinned glossary term found in only one rendering puts
+that one first. The draft carries two; tr-ref --conflicts lists every
+rendering with its count and the date that ordered it. A translation read
+by OCR is offered the same way, tagged (OCR), and never reused on its own,
+since its misreadings would pass straight into the output. References stay
+in their project: memory never crosses matters, and a reference is a
+client’s document.
 
 On invented test documents a Word pair kept 12 of 14 sentence pairs and
 a Word-to-PDF pair 4 of 6; the rest were rejected rather than guessed. A
@@ -993,7 +1003,7 @@ reviewed by a translator.
 | Certification         | Batch form, stamp on paper | No per-document certification block. `.docx` primary, `.pdf` acceptable, `.xlsx` for tables since text formats handle them poorly |
 | Language pairs        | sl↔en and en↔de; sl↔de not yet | Every one of the three can be source or target. Slovene↔German has no model chosen and refuses to translate: the model researched for it is not installed, and pivoting through English doubles the error |
 | Prompt version        | Derived from the prompt text | A hand-bumped string invalidated every pair at once and could be forgotten. A hash of the text each pair is actually sent changes exactly when that text does. The two v6 texts keep the name v6, so existing memory stays valid |
-| Reference translations | Reused when identical and agreed | An identical source sentence takes the translator's own rendering with no model call. Only one-to-one pairs whose numbers agree are kept; disagreeing references and OCR-read translations are never reused verbatim. They stay in their project, because memory never crosses matters |
+| Reference translations | Reused when identical and agreed; otherwise offered | An identical source sentence takes the translator's own rendering with no model call. Only one-to-one pairs whose numbers agree are kept. Where references disagree, the draft carries REF_OPTIONS with the two leading renderings — most documents first, then the newest by the file's own saved date, a pinned glossary term ahead of both — because choosing between human renderings is the translator's decision. OCR-read translations, and another variant's where the project's own has none, are offered tagged and never reused on their own. They stay in their project, because memory never crosses matters |
 | German variants       | A target setting; plain de is Germany | TR_TGT names de-DE, de-AT or de-CH, and de-DE is read as de, so a Germany project keeps its memory however the target is spelled. Swiss and Austrian drafts are refused until their conventions are built, rather than written by Germany's. A reference translation is reused only in its own variant, because renderings in two variants differ as a matter of course |
 | Disk encryption       | Container only — accepted  | The root filesystem is plain ext4 and stays that way. Retrofitting means re-encrypting in place or reinstalling, and the container is what actually protects the case material at rest. Accepted residual risk, named so it is not rediscovered as a surprise: swap, temporary files, and anything copied out for review are in the clear, as is everything while the container is open. One part of that has since been closed rather than accepted: OCR renders every page of a scan to a PNG, and on an all-scanned corpus that put the whole evidence bundle through /tmp — tmpfs, so RAM-backed and swappable to the plain 8 GB swapfile, and left behind entirely when a run is killed before its cleanup. Those renders now go to `<project>/work/tmp` inside the container (`trlib.case_tmpdir`). Encrypted swap is the cheapest of the remaining mitigations if the rest is revisited |
 | Project isolation     | Separate memory per matter | Memory holds real sentences. Sharing it across clients would move content between matters                                         |
