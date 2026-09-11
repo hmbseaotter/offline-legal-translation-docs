@@ -766,7 +766,7 @@ alongside the drafts.
 
 | **Check** | **Meaning**                                                                                                                                   |
 |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| FAIL      | The segment errored out and contains no translation. Fix and re-run first                                                                     |
+| FAIL      | A deliverable holds [TRANSLATION FAILED]: a segment the model could not translate. tr-run has counted its file as failed and drafts it again on the next run                                                                     |
 | NUM       | A number in the source is absent from the target, or a number appears that was not in the source. Highest consequence class in legal evidence |
 | LONG      | The target is far longer than the source, or runs to several lines where the source is one: text the model added. On a bare heading that can be a whole invented paragraph. tr-run refuses such replies; this finds any already in a memory |
 | NONTR     | A string marked non-translatable was altered or dropped                                                                                       |
@@ -1003,12 +1003,13 @@ invents: "Case number" came back as a fictitious German court reference,
 and the heading STATEMENT as a whole invented declaration. tr-run gives
 such a reply one firmer retry — a reply far longer than its source, or
 one carrying a number the source does not have. A reply still far too
-long after it is written as [TRANSLATION FAILED]; one still carrying an
-extra number is kept and reported by tr-lint as NUM, because "dva
-tedna" rendered as "2 weeks" adds a digit without adding anything false.
-Over eight number-prone labels, three replies invented something and
-none did after the retry. And no German draft has yet been
-reviewed by a translator.
+long after it is written as [TRANSLATION FAILED], and its file counts as
+failed: tr-run exits 1, records nothing for it and drafts it again on
+the next run, and tr-lint lists it; one still carrying an extra number
+is kept and reported by tr-lint as NUM, because "dva tedna" rendered as
+"2 weeks" adds a digit without adding anything false. Over eight
+number-prone labels, three replies invented something and none did after
+the retry. And no German draft has yet been reviewed by a translator.
 
 **13. Decisions and why**
 
