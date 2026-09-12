@@ -712,6 +712,8 @@ the container.
 >
 > **tr-project** *\# confirm which project is active*
 >
+> **tr-project** kranj-2024 *\# switch to another project*
+>
 > **tr-inventory** *\# classify the drop; after new files arrive*
 >
 > **tr-status** *\# what remains*
@@ -727,6 +729,10 @@ the container.
 > **tr-run** source/one.docx *\# a single file*
 >
 > **tr-lint** *\# after any run*
+>
+> **cp** -av --update=none source/. \<client\>/in/356/ *\# deliver the originals to the archive*
+>
+> **cp** -av --update=none translated/. \<client\>/out/356/ *\# and the translations, overwriting nothing*
 >
 > **case-close** *\# lock up when finished*
 
@@ -991,13 +997,18 @@ inherits it:
 > TR_TGT=de
 >
 > TR_OCR_LANGS=eng
+>
+> TR_SUFFIX=auto
 
-Nothing else is set: the model follows the pair. GaMS3 translates
-Slovene↔English; EuroLLM-9B-Instruct-2512 (Q8_0) translates
-English↔German, because German is absent from every stage of GaMS3's
-training. tr-run names the model in its banner and refuses to start when
-it is not installed. Slovene↔German has no model chosen and refuses to
-translate.
+TR_SUFFIX=auto is optional: each translation takes its language's label,
+lease_German.docx. Decide it before the first tr-run, because changing
+it later renames every deliverable and leaves the old files in
+translated/, listed as orphaned. Nothing else needs setting: the model
+follows the pair. GaMS3 translates Slovene↔English;
+EuroLLM-9B-Instruct-2512 (Q8_0) translates English↔German, because
+German is absent from every stage of GaMS3's training. tr-run names the
+model in its banner and refuses to start when it is not installed.
+Slovene↔German has no model chosen and refuses to translate.
 
 TR_TGT=de is German as written in Germany, and de-DE means the same, so
 a project may use either without touching its translation memory.
