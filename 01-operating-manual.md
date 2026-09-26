@@ -564,6 +564,37 @@ model fed corrupted OCR does not flag the corruption. It produces a
 fluent, confident translation of the corruption. A misread digit in a
 date or an amount arrives looking entirely correct.
 
+**The language list comes before either stage.** TR_OCR_LANGS in
+project.conf names the languages on the page rather than the pair being
+translated: slv+eng for a Slovene drop, eng+slv for an English one in a
+Slovene matter, eng where nothing else appears on the page, and deu added
+— eng+deu, slv+deu — where German passages do. German is never a source
+language here; de, de-AT and de-CH are target flavors, and Tesseract has
+one German either way.
+
+Order matters, because Tesseract weights the first entry. On an English
+page carrying a Slovene court name, slv+eng corrupted ordinary English
+words, eng alone mangled Okrožno sodišče, and eng+slv read both. Keep the
+list to what is actually on the page: each language added is another word
+list for a doubtful shape to be matched against, and a slower pass over
+every page. tesseract --list-langs says what is installed — deu, eng,
+hrv, slv, srp and srp\_latn here — and a language that is not installed
+stops the run rather than quietly using one that is.
+
+Set it before the first pass. Text layers are cached, and nothing
+re-reads a page because a setting changed, so a file already read has
+both of its cached files removed first:
+
+> **rm** work/ocr/\<layer\>.txt work/ocr/\<layer\>.ocr.pdf
+
+\<layer\> is the file's path under source/ without its extension, with /
+written \_\_, so source/drop2/prilogi/zapisnik.pdf is read back from
+work/ocr/drop2\_\_prilogi\_\_zapisnik.txt. This is the setting whose
+mistake is silent: a wrong list does not produce OCR_ILLEGIBLE, it
+produces real words at a confidence Tesseract is satisfied with, which
+tr-ocrstat then scores as legible. Reading the text against the page,
+below, is the only check that sees it.
+
 > *\# stage 1 - OCR only, then stop*
 >
 > **tr-pdf** --ocr-only source/zapisnik.pdf
@@ -939,19 +970,19 @@ not held at full charge continuously:
 
 **11. Troubleshooting**
 
-| **Symptom**                      | **Cause and fix**                                                                                             |
-|----------------------------------|---------------------------------------------------------------------------------------------------------------|
-| no active project                | Run tr-project \<name\>. Tools refuse rather than guess                                                       |
-| container not mounted            | Run case-open. When closed the path is empty by design                                                        |
-| Wrong project translated         | tr-run prints a banner and asks first; read it. Delete the wrong outputs and re-run                           |
-| Connection refused               | Ollama is not running. systemctl status ollama; sudo systemctl start ollama                                   |
-| \[TRANSLATION FAILED\] in output | Model unreachable or timed out. Fix the cause, then re-run; cached segments are not regenerated               |
-| Process killed mid-run           | Out of memory. Check swap (S3.2) and lower TR_NUM_CTX                                                         |
-| Output contains commentary       | Model ignored the output-only instruction. Lower temperature, or tighten prompts/translate.txt                |
-| Sentences split at abbreviations | Add the abbreviation to ABBREV in lib/trlib.py and re-run with a new TR_PROMPT_VERSION                        |
-| Case numbers being translated    | Add a pattern to nontranslatable.txt; verify with is_translatable() per S4.3                                  |
-| Very slow                        | Confirm mains power and that the platform profile is not power-saver: cat /sys/firmware/acpi/platform_profile |
-| Diacritics wrong in OCR          | Confirm -l slv+eng was used. Set TR_OCR_LANGS if the pair differs                                             |
+| **Symptom**                      | **Cause and fix**                                                                                                                                       |
+|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| no active project                | Run tr-project \<name\>. Tools refuse rather than guess                                                                                                 |
+| container not mounted            | Run case-open. When closed the path is empty by design                                                                                                  |
+| Wrong project translated         | tr-run prints a banner and asks first; read it. Delete the wrong outputs and re-run                                                                     |
+| Connection refused               | Ollama is not running. systemctl status ollama; sudo systemctl start ollama                                                                             |
+| \[TRANSLATION FAILED\] in output | Model unreachable or timed out. Fix the cause, then re-run; cached segments are not regenerated                                                         |
+| Process killed mid-run           | Out of memory. Check swap (S3.2) and lower TR_NUM_CTX                                                                                                   |
+| Output contains commentary       | Model ignored the output-only instruction. Lower temperature, or tighten prompts/translate.txt                                                          |
+| Sentences split at abbreviations | Add the abbreviation to ABBREV in lib/trlib.py and re-run with a new TR_PROMPT_VERSION                                                                  |
+| Case numbers being translated    | Add a pattern to nontranslatable.txt; verify with is_translatable() per S4.3                                                                            |
+| Very slow                        | Confirm mains power and that the platform profile is not power-saver: cat /sys/firmware/acpi/platform_profile                                           |
+| Diacritics or words wrong in OCR | Check TR_OCR_LANGS names the languages on the page, the bulk of it first (S5.3). Delete the cached layer and its .ocr.pdf before reading the file again |
 
 **12. Environment variables**
 <!-- GENERATED:env -->
